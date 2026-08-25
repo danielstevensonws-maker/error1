@@ -8,8 +8,9 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
-    "check": "tsc -p tsconfig.json --noEmit && vitest run",
-    "ingest": "tsx ingest/run.ts"
+    "check": "tsc -p tsconfig.check.json && vitest run",
+    "ingest": "tsx ingest/run.ts",
+    "typecheck": "tsc -p tsconfig.check.json"
   },
   "dependencies": {
     "@questra/contracts": "*"

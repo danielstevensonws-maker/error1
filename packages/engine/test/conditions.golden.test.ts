@@ -130,7 +130,7 @@ describe('the ingestion pipeline (deterministic half)', () => {
     }
   });
   it('every ingested srd_text matches the verified dataset (extraction == what we signed off)', () => {
-    const drafts = new Map(ingestConditions(rawSrd).map((d) => [d.id, d.srd_text]));
+    const drafts = new Map<string, string>(ingestConditions(rawSrd).map((d) => [d.id, d.srd_text]));
     for (const c of CONDITIONS) {
       expect(drafts.get(c.id), c.id).toBe(c.srd_text);
     }

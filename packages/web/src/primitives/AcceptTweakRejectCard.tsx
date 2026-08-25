@@ -1,289 +1,318 @@
 /**
- * AcceptTweakRejectCard — THE universal AI-output grammar. Orchestration §4:
- * "Any AI output that populates UI renders into the single accept/tweak/reject
- * card." Reused by every AI touchpoint — rulings, NPC lines, premise drafts,
- * bond proposals, scene sequences, read-aloud, recaps, level-up nudges.
+ * AcceptTweakRejectCard — the universal AI-output card (Orchestration spec §4;
+ * CLAUDE.md law #2 "the app must never say no" pairs with "AI suggests, the
+ * DM decides"; component-list A3).
  *
- * The one rule it enforces (CLAUDE.md non-negotiable #5, ADR-0005's spirit):
- *   SUGGESTS, NEVER COMMITS. Nothing here auto-applies. The draft sits in the
- *   card until a human accepts it, tweaks it, or rejects it — three motions,
- *   always all three, so the human gate is structural, not optional.
+ * Any AI output that populates UI renders through this ONE card; there is no
+ * second AI presentation anywhere in the product. The play screen's journal
+ * had quietly become one — its own quote-plus-buttons block, in its own visual
+ * language, doing this card's job — so it now renders this card inline instead.
+ * That is what `placement` is for:
  *
- * Content-agnostic by design: the draft body is a ReactNode (or plain text),
- * because the AI *schemas* it renders (RulingSuggestion, NpcLine, …) are their
- * own contract PRs. The card is the frame; the schema-specific view is passed in.
+ *   float   it interrupted you. A glass card over the map, its own shadow.
+ *   inline  it is one item in the journal's stream. No glass of its own, an
+ *           accent rule down the left edge, and the same three motions.
  *
- * Design: the Questra V1 Prototype sheet, §AcceptTweakRejectCard. An opaque
- * --qa-ink-raised card (NOT glass — it's an authoring/review surface). A 6px
- * ember dot is the provenance mark; the eyebrow reads "Suggestion · {kind}".
- * Reject is an italic, underlined text button set apart from Accept on purpose.
- * While streaming there is no footer at all. Fallback flips the dot + eyebrow to
- * gold. Themed entirely via --qa-* tokens.
+ * THE INVARIANT: nothing an AI writes is applied until a human presses Accept
+ * (or edits it via Tweak and saves, or picks a Fallback option). Reject always
+ * leaves the scene untouched.
+ *
+ * THE HOST OWNS THE STATE MACHINE. This component never transitions itself —
+ * it only reports intent via callbacks (onAccept/onReject/…) and the host
+ * flips `state`/`outcome` in response (see the InteractiveLoop story). That
+ * keeps the state machine visible and testable in the caller, the same way
+ * InfoPanel's open/close lives in its caller, not inside the panel.
+ *
+ * Content is agnostic via `kind`: "text" renders prose, "structured" renders
+ * label/value rows (a ruling's check/DC/consequence). See aiOutputToCard.ts
+ * for the @questra/contracts → StructuredRow[] mapping — a new AI output
+ * schema needs a mapping there, never a change here.
  */
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactElement } from 'react';
+import { Button } from '@questra/ui';
+import { DesignStyles, Eyebrow, narration, prose, quote, statMeta, statValue } from '../design/index.js';
 
-/** What the human did with the draft — the acceptance telemetry Orchestration §4 wants. */
+export type CardState = 'streaming' | 'draft' | 'tweak' | 'fallback' | 'resolved';
+export type CardKind = 'text' | 'structured';
 export type CardOutcome = 'accepted' | 'tweaked' | 'rejected';
 
-export interface AcceptTweakRejectCardProps {
-  /** Short label of what the AI produced ("Ruling", "NPC line", "Recap"). Plain language. */
-  title: string;
-  /**
-   * The draft itself. A string renders as body text; a ReactNode renders as-is
-   * (a schema-specific view — a ruling's check+DC, a bond's two portraits, …).
-   */
-  draft: ReactNode;
-  /** True while the model is still streaming — the card shows a live/pending state. */
-  streaming?: boolean;
-  /**
-   * The AI always has a non-AI fallback (ADR: "AI always has a non-AI fallback").
-   * When the model failed or was skipped, pass a fallback node instead of a draft.
-   */
-  fallback?: ReactNode;
-  /** Accept the draft as-is. */
-  onAccept: () => void;
-  /**
-   * Tweak: reveals an editable copy of the draft text. Called with the edited
-   * text on confirm. Omit to hide tweak (e.g. non-textual drafts).
-   */
-  onTweak?: (edited: string) => void;
-  /** The raw editable text seed for tweak mode (usually the draft's source text). */
-  tweakSeed?: string;
-  /** Reject the draft; nothing is applied. */
-  onReject: () => void;
-  /** Fires on every terminal outcome for telemetry (Orchestration §4). */
-  onOutcome?: (outcome: CardOutcome) => void;
-  acceptLabel?: string;
-  rejectLabel?: string;
+/** Over the map, or inside the journal's stream. Default "float". */
+export type CardPlacement = 'float' | 'inline';
+
+export interface StructuredRow {
+  label: string;
+  value: string;
+  /** "value" = serif prose · "number" = mono numeral · "note" = italic consequence line. Default "value". */
+  variant?: 'value' | 'number' | 'note';
 }
 
-const card: CSSProperties = {
-  width: 330,
-  padding: 16,
-  borderRadius: 'var(--qa-radius-md)',
-  background: 'var(--qa-ink-raised)',
-  border: '1px solid var(--qa-hairline)',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 12,
-};
+export interface FallbackOption {
+  name: string;
+  value: string;
+  recommended?: boolean;
+}
 
-const eyebrow: CSSProperties = {
-  fontFamily: 'var(--qa-font-mono)',
-  fontSize: 8.5,
-  letterSpacing: 'var(--qa-track-label)',
-  textTransform: 'uppercase',
-  color: 'var(--qa-vellum-dim)',
-};
+export interface AcceptTweakRejectCardProps {
+  state: CardState;
+  /** Body shape for draft/streaming/tweak. Default "text". */
+  kind?: CardKind;
+  /** Default "float". */
+  placement?: CardPlacement;
+  /** Header eyebrow. Default "Suggestion" (or "Fallback" in the fallback state). */
+  eyebrow?: string;
+  /** Header source tag, e.g. "DM Narration" / "DM Ruling". */
+  source?: string;
+
+  /**
+   * What the player said that prompted this. Shown above the body so a
+   * suggestion in a busy journal still says what it is answering.
+   */
+  quoted?: string;
+  /** Prose body (draft/streaming/tweak seed). */
+  text?: string;
+  /** Structured ruling body. */
+  rows?: StructuredRow[];
+
+  /** Fallback prompt + options — the non-AI path (ADR: AI always has a non-AI fallback). */
+  fallbackPrompt?: string;
+  fallbackOptions?: FallbackOption[];
+
+  /**
+   * Footer labels. Accept defaults to "Accept", or on the ladder to the rung
+   * currently armed ("Use Moderate (13)") so the button never names a
+   * difficulty other than the one it will apply.
+   */
+  acceptLabel?: string;
+  tweakLabel?: string;
+  rejectLabel?: string;
+
+  /** Outcome shown in the resolved state. Default "accepted". */
+  outcome?: CardOutcome;
+
+  onAccept?: (option?: FallbackOption) => void;
+  onReject?: () => void;
+  onTweak?: () => void;
+  onSaveTweak?: (text: string) => void;
+  onCancelTweak?: () => void;
+  onUndo?: () => void;
+  /**
+   * Fires alongside onAccept/onSaveTweak/onReject. Orchestration §4: "the
+   * card logs accept/tweak/reject outcomes — that acceptance-rate telemetry
+   * is the quality metric for every prompt."
+   */
+  onOutcome?: (outcome: CardOutcome) => void;
+}
 
 export function AcceptTweakRejectCard({
-  title,
-  draft,
-  streaming = false,
-  fallback,
-  onAccept,
-  onTweak,
-  tweakSeed = '',
-  onReject,
-  onOutcome,
-  acceptLabel = 'Accept',
+  state,
+  kind = 'text',
+  placement = 'float',
+  eyebrow,
+  source,
+  quoted,
+  text = '',
+  rows = [],
+  fallbackPrompt = "The assistant couldn't reach a ruling. Set the difficulty yourself:",
+  fallbackOptions = [],
+  acceptLabel,
+  tweakLabel = 'Tweak',
   rejectLabel = 'Reject',
-}: AcceptTweakRejectCardProps) {
-  const [tweaking, setTweaking] = useState(false);
-  const [text, setText] = useState(tweakSeed);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  outcome = 'accepted',
+  onAccept,
+  onReject,
+  onTweak,
+  onSaveTweak,
+  onCancelTweak,
+  onUndo,
+  onOutcome,
+}: AcceptTweakRejectCardProps): ReactElement {
+  const taRef = useRef<HTMLTextAreaElement>(null);
+  const [tweakText, setTweakText] = useState(text);
 
-  useEffect(() => { setText(tweakSeed); }, [tweakSeed]);
-  useEffect(() => { if (tweaking) textareaRef.current?.focus(); }, [tweaking]);
+  // Which rung of the ladder is armed. The recommendation is only a starting
+  // position — see the option tiles for why it has to be changeable.
+  const recommended = fallbackOptions.find((o) => o.recommended) ?? fallbackOptions[0];
+  const [picked, setPicked] = useState<string | undefined>(recommended?.name);
+  useEffect(() => setPicked(recommended?.name), [recommended?.name]);
 
-  const showFallback = fallback !== undefined && !streaming;
-  const canTweak = onTweak !== undefined && !showFallback;
+  // Seed + focus (caret at end) only on ENTERING tweak mode — `text` is
+  // deliberately not a dependency, or every keystroke upstream would stomp
+  // the in-progress edit.
+  useEffect(() => {
+    if (state !== 'tweak') return;
+    setTweakText(text);
+    const el = taRef.current;
+    if (el) {
+      el.focus();
+      el.setSelectionRange(el.value.length, el.value.length);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
 
-  function fire(outcome: CardOutcome, action: () => void) {
-    action();
-    onOutcome?.(outcome);
-  }
+  const structured = kind === 'structured';
+  const isFallback = state === 'fallback';
+  const isDecision = state === 'draft' || state === 'fallback';
+  // Tweak is offered whenever the host can honour it, prose or ruling. The
+  // card used to refuse it on structured content, which quietly conflated two
+  // different things: a ruling's rows are not free-text editable (true — the
+  // tweak MODE below stays prose-only), and a ruling cannot be argued with
+  // (false, and law 1 says the opposite). A structured host answers Tweak by
+  // opening the difficulty ladder; a prose host opens the editor.
+  const showTweakBtn = state === 'draft' && onTweak !== undefined;
+  const showFooter = state === 'draft' || state === 'fallback' || state === 'tweak';
 
-  const dotColor = showFallback ? 'var(--qa-gold)' : 'var(--qa-ember)';
-  const eyebrowColor = showFallback ? 'var(--qa-gold)' : 'var(--qa-vellum-dim)';
+  const resolvedEyebrow = eyebrow ?? (isFallback ? 'Fallback' : 'Suggestion');
+  const resolvedSource = source ?? (structured ? 'DM Ruling' : 'DM Narration');
+
+  const done: Record<CardOutcome, string> = {
+    accepted: 'Accepted — applied to the scene.',
+    tweaked: 'Saved your changes — applied to the scene.',
+    rejected: 'Rejected — nothing was applied.',
+  };
+
+  // Button writes its padding as an inline style, so a class cannot shrink it
+  // — the size has to arrive the same way. Three full-size buttons overflow a
+  // rail; compacting them keeps the three motions on one or two tidy lines.
+  const btn: CSSProperties | undefined =
+    placement === 'inline' ? { padding: 'var(--qa-s1) var(--qa-s3)', fontSize: 'var(--qa-text-label)' } : undefined;
+
+  // On the ladder, Accept names what it will apply — and has to keep naming it
+  // as the pick moves, or the button says Moderate while Hard is armed. An
+  // explicit label still wins: a caller who wants "Ask for the roll" gets it.
+  const pickedOption = fallbackOptions.find((o) => o.name === picked);
+  const accept =
+    acceptLabel ?? (isFallback && pickedOption !== undefined ? `Use ${pickedOption.name} (${pickedOption.value})` : 'Accept');
+
+  const handleAccept = (): void => {
+    const option = isFallback ? pickedOption : undefined;
+    onAccept?.(option);
+    onOutcome?.('accepted');
+  };
+  const handleReject = (): void => {
+    onReject?.();
+    onOutcome?.('rejected');
+  };
+  const handleSaveTweak = (): void => {
+    onSaveTweak?.(tweakText);
+    onOutcome?.('tweaked');
+  };
 
   return (
-    <article aria-busy={streaming} style={card}>
-      {/* provenance eyebrow: [dot] SUGGESTION · {title} */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span
-          // pulses while streaming; the qa- class lets base.css still it under reduced-motion
-          className={streaming ? 'qa-atr-dot' : undefined}
-          style={{
-            width: 6,
-            height: 6,
-            borderRadius: '50%',
-            background: dotColor,
-            ...(streaming ? { animation: 'qa-dot 1.2s infinite' } : {}),
-          }}
-        />
-        <span style={{ ...eyebrow, color: eyebrowColor }}>
-          {showFallback ? 'Fallback' : 'Suggestion'} · {title}
+    <section
+      className={`qa2-modal qa2-ai is-${placement}`}
+      role="region"
+      aria-label={`${resolvedEyebrow} — ${structured ? 'DM ruling' : 'narration'}`}
+      aria-busy={state === 'streaming'}
+    >
+      <DesignStyles />
+
+      <header className="qa2-modal-head">
+        <span className="qa2-ai-who">
+          <span className="qa2-ai-dot" title="An assistant wrote this" />
+          <Eyebrow>{resolvedEyebrow}</Eyebrow>
         </span>
+        <span style={statMeta}>{resolvedSource}</span>
+      </header>
+
+      <div className="qa2-modal-body">
+        {quoted !== undefined && <p style={{ ...quote, margin: 0 }}>&ldquo;{quoted}&rdquo;</p>}
+
+        {state === 'draft' && !structured && <p style={{ ...narration, margin: 0, whiteSpace: 'pre-line' }}>{text}</p>}
+
+        {state === 'draft' && structured && rows.map((row) => <RulingRow key={row.label} row={row} />)}
+
+        {state === 'streaming' && (
+          <p style={{ ...narration, margin: 0, whiteSpace: 'pre-line' }}>
+            {text}
+            <span className="qa2-ai-caret" aria-hidden="true" />
+          </p>
+        )}
+
+        {state === 'tweak' && (
+          <span className="qa2-open">
+            <textarea
+              ref={taRef}
+              className="qa2-input"
+              value={tweakText}
+              onChange={(e) => setTweakText(e.target.value)}
+              aria-label="Edit the suggestion"
+              style={{ ...prose, minHeight: 148, width: '100%' }}
+            />
+          </span>
+        )}
+
+        {state === 'fallback' && (
+          <>
+            <p style={{ ...prose, margin: 0 }}>{fallbackPrompt}</p>
+            <div className="qa2-ai-opts" role="radiogroup" aria-label="Difficulty">
+              {fallbackOptions.map((option) => (
+                <button
+                  key={option.name}
+                  type="button"
+                  role="radio"
+                  aria-checked={option.name === picked}
+                  className={`qa2-ai-opt${option.name === picked ? ' is-picked' : ''}`}
+                  onClick={() => setPicked(option.name)}
+                >
+                  <span style={prose}>{option.name}</span>
+                  <span style={statValue}>{option.value}</span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {state === 'resolved' && (
+          <div className="qa2-ai-done">
+            <span className={`qa2-ai-seal${outcome === 'rejected' ? '' : ' is-applied'}`} />
+            <span style={prose}>{done[outcome]}</span>
+            <button type="button" className="qa2-ai-undo" style={statMeta} onClick={() => onUndo?.()}>
+              Undo
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* body */}
-      {streaming ? (
-        <StreamingBody>{draft}</StreamingBody>
-      ) : showFallback ? (
-        fallback
-      ) : tweaking ? (
-        <textarea
-          ref={textareaRef}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          rows={4}
-          style={{
-            width: '100%',
-            boxSizing: 'border-box',
-            resize: 'vertical',
-            fontFamily: 'var(--qa-font-body)',
-            fontSize: 14,
-            lineHeight: 1.55,
-            color: 'var(--qa-vellum)',
-            background: 'var(--qa-vellum-ghost)',
-            border: '1px solid var(--qa-hairline)',
-            borderRadius: 'var(--qa-radius-sm)',
-            padding: '10px 12px',
-            outline: 'none',
-            boxShadow: 'var(--qa-focus-ring)',
-          }}
-        />
-      ) : typeof draft === 'string' ? (
-        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: 'var(--qa-vellum)', whiteSpace: 'pre-wrap' }}>
-          {draft}
-        </p>
-      ) : (
-        draft
-      )}
-
-      {/* footer — suppressed entirely while streaming */}
-      {!streaming && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            borderTop: '1px solid var(--qa-hairline-soft)',
-            paddingTop: 12,
-          }}
-        >
-          {tweaking ? (
+      {/* deciding happens HERE, and only here */}
+      {showFooter && (
+        <footer className="qa2-modal-foot">
+          {isDecision && (
             <>
-              <PrimaryButton onClick={() => { fire('tweaked', () => onTweak!(text)); setTweaking(false); }}>
-                Save changes
-              </PrimaryButton>
-              <RejectButton onClick={() => setTweaking(false)}>Cancel</RejectButton>
-            </>
-          ) : (
-            <>
-              <PrimaryButton onClick={() => fire('accepted', onAccept)}>{acceptLabel}</PrimaryButton>
-              {canTweak && <TweakButton onClick={() => setTweaking(true)}>Tweak</TweakButton>}
-              <span style={{ flex: 1 }} />
-              <RejectButton onClick={() => fire('rejected', onReject)}>{rejectLabel}</RejectButton>
+              <Button variant="primary" style={btn} onClick={handleAccept}>{accept}</Button>
+              {showTweakBtn && <Button style={btn} onClick={() => onTweak?.()}>{tweakLabel}</Button>}
+              {/* Pushing Reject to the far edge separates a destructive motion
+                  from the ones beside it. A rail has no far edge to push to. */}
+              {placement === 'float' && <span style={{ flex: 1 }} />}
+              <Button variant="danger" style={btn} onClick={handleReject}>{rejectLabel}</Button>
             </>
           )}
-        </div>
+
+          {state === 'tweak' && (
+            <>
+              <Button variant="primary" style={btn} onClick={handleSaveTweak}>Save changes</Button>
+              <Button style={btn} onClick={() => onCancelTweak?.()}>Cancel</Button>
+            </>
+          )}
+        </footer>
       )}
-
-      <style>{`
-        /* qa-caret is not (yet) a theme keyframe; qa-dot is. Define the caret
-           locally, the way ComposeRollSheet owns qa-die-spin. */
-        @keyframes qa-caret { 0%,49% { opacity: 1 } 50%,100% { opacity: 0 } }
-        @media (prefers-reduced-motion: reduce) {
-          .qa-atr-dot, .qa-atr-caret { animation: none !important }
-        }
-      `}</style>
-    </article>
+    </section>
   );
 }
 
-function StreamingBody({ children }: { children: ReactNode }) {
+/** One ruling row — mono label, value styled by what it IS rather than where it sits. */
+function RulingRow({ row }: { row: StructuredRow }): ReactElement {
   return (
-    <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: 'var(--qa-vellum)' }}>
-      {typeof children === 'string' ? children : children}
-      <span
-        aria-label="Still writing…"
-        className="qa-atr-caret"
-        style={{
-          display: 'inline-block',
-          width: 7,
-          height: 14,
-          background: 'var(--qa-vellum)',
-          verticalAlign: 'text-bottom',
-          marginLeft: 2,
-          animation: 'qa-caret 1s steps(1) infinite',
-        }}
-      />
-    </p>
+    <div className={`qa2-rowline${row.variant === 'note' ? ' is-note' : ''}`}>
+      <span style={statMeta}>{row.label}</span>
+      <span style={valueRole(row.variant)}>{row.value}</span>
+    </div>
   );
 }
 
-/** The ember primary — Accept / Save changes / Use Medium. Display serif. */
-function PrimaryButton({ children, onClick }: { children: ReactNode; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        fontFamily: 'var(--qa-font-display)',
-        fontSize: 13,
-        border: 'none',
-        borderRadius: 'var(--qa-radius-sm)',
-        padding: '8px 16px',
-        background: 'linear-gradient(180deg,var(--qa-ember),var(--qa-ember-deep))',
-        color: 'var(--qa-vellum-bright)',
-        cursor: 'pointer',
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
-/** Tweak — a quiet ghost-filled secondary. */
-function TweakButton({ children, onClick }: { children: ReactNode; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        fontFamily: 'var(--qa-font-body)',
-        fontSize: 13,
-        border: '1px solid var(--qa-hairline)',
-        borderRadius: 'var(--qa-radius-sm)',
-        padding: '8px 16px',
-        background: 'var(--qa-vellum-ghost)',
-        color: 'var(--qa-vellum)',
-        cursor: 'pointer',
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
-/** Reject / Cancel / Dismiss — an italic underlined text button, set apart. */
-function RejectButton({ children, onClick }: { children: ReactNode; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        fontFamily: 'var(--qa-font-body)',
-        fontStyle: 'italic',
-        fontSize: 12.5,
-        border: 'none',
-        borderBottom: '1px solid var(--qa-hairline)',
-        background: 'none',
-        padding: '2px 4px',
-        color: 'var(--qa-vellum-dim)',
-        cursor: 'pointer',
-      }}
-    >
-      {children}
-    </button>
-  );
+function valueRole(variant: StructuredRow['variant']): CSSProperties {
+  if (variant === 'number') return statValue;
+  // A consequence is a sentence, so it reads left to right like one. The other
+  // two are answers to a label and hang off the right edge beside it.
+  if (variant === 'note') return { ...prose, fontStyle: 'italic', color: 'var(--qa-ink-dim)' };
+  return { ...prose, textAlign: 'right' };
 }

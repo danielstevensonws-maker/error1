@@ -1,7 +1,32 @@
-/* Questra Design System — global entry point.
-   Consumers link ONLY this file. Keep it as @import lines. */
-@import "./tokens/fonts.css";
-@import "./tokens/colors.css";
-@import "./tokens/typography.css";
-@import "./tokens/spacing.css";
-@import "./tokens/effects.css";
+/**
+ * @questra/theme — the stylesheet every app entry imports.
+ *
+ * Importing this gives you the token set plus the minimal base rules that
+ * consume it. It declares NO component styles; primitives own their own look
+ * and read `--qa-*` from here.
+ */
+
+@import './tokens.css';
+
+/* The theme must be selected for the tokens to apply. Default the document to
+   ghost so a bare `<html>` renders correctly; any subtree can override with
+   its own [data-qa-theme="..."] once slate/ivory ship. */
+:root { color-scheme: dark; }
+
+html[data-qa-theme],
+body {
+  margin: 0;
+  background: var(--qa-map-lo);
+  color: var(--qa-ink);
+  font-family: var(--qa-font-body);
+}
+
+/* Motion is opt-out globally: anything animating must respect this. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

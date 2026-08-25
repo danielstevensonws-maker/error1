@@ -16,3 +16,4 @@ export * from './play/wire.js';
 export * from './play/ai.js';
 export * from './world/room.js';
 export * from './identity.js';
+export * from './campaign.js';

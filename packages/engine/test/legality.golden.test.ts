@@ -67,6 +67,28 @@ describe('Brief 10 §5 #3 — the shared legality function: reject strings for i
     expect(r).toEqual({ legal: false, reason: 'No uses of that left — take a rest to recover it.' });
   });
 
+  it('a spell with no slots left at that level', () => {
+    const intent: Intent = { kind: 'cast', casterId: 'pc-torvald', spellId: 'spell.fireball', slotLevel: 3 };
+    const r = checkIntent(intent, state(), { slotsRemaining: { 1: 4, 2: 3, 3: 0 } });
+    expect(r).toEqual({ legal: false, reason: 'No level 3 slots left — take a rest to get them back.' });
+  });
+
+  it('a spell you still have the slot for is legal', () => {
+    const intent: Intent = { kind: 'cast', casterId: 'pc-torvald', spellId: 'spell.fireball', slotLevel: 3 };
+    expect(greyingReason(intent, state(), { slotsRemaining: { 3: 1 } })).toBeNull();
+  });
+
+  it('cantrips never run out', () => {
+    const intent: Intent = { kind: 'cast', casterId: 'pc-torvald', spellId: 'spell.fire-bolt', slotLevel: 0 };
+    expect(greyingReason(intent, state(), { slotsRemaining: {} })).toBeNull();
+  });
+
+  it('slots the caller did not supply are not guessed at', () => {
+    // Same rule as resourceRemaining: absent means "unknown", so nothing is refused.
+    const intent: Intent = { kind: 'cast', casterId: 'pc-torvald', spellId: 'spell.fireball', slotLevel: 3 };
+    expect(greyingReason(intent, state())).toBeNull();
+  });
+
   it('free text is never greyed (it routes to a ruling)', () => {
     const intent: Intent = { kind: 'free_text', creatureId: 'pc-torvald', text: 'I try to intimidate it' };
     expect(greyingReason(intent, state({ activeCreatureId: 'npc-goblin-1' }), { activeTurnEnforced: true })).toBeNull();
@@ -80,6 +102,7 @@ describe('Brief 10 §5 #3 — the shared legality function: reject strings for i
       checkIntent(attack(), state({}, [torvald, { ...goblin, hp: 0 }])),
       checkIntent(attack(), state(), { targetInRange: false }),
       checkIntent({ kind: 'use_feature', creatureId: 'pc-torvald', featureId: 'f' }, state(), { resourceRemaining: 0 }),
+      checkIntent({ kind: 'cast', casterId: 'pc-torvald', spellId: 'spell.fireball', slotLevel: 3 }, state(), { slotsRemaining: { 3: 0 } }),
     ];
     for (const r of rejects) {
       expect(r.legal).toBe(false);

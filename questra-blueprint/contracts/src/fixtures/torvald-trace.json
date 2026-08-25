@@ -1,0 +1,105 @@
+{
+  "description": "Brief 02 §5 canonical trace: Torvald (Fighter 1, STR 16, prof +2, Prone, Bless) attacks Goblin Warrior (AC 15) behind half cover from 5 ft. Disadvantage collapse, Bless d4=3, rolls 14/9 keep 9, total 17 vs 17 = hit, 1d8+3 rolls 6 = 9 damage, goblin 10→1 HP.",
+  "events": [
+    {
+      "seq": 41,
+      "id": "evt-0041",
+      "at": "2026-07-18T09:15:02.000Z",
+      "actor": { "kind": "player", "accountId": "acct-torvald", "creatureId": "pc-torvald" },
+      "visibility": "public",
+      "body": {
+        "t": "intent_declared",
+        "creatureId": "pc-torvald",
+        "intent": {
+          "kind": "attack",
+          "attackerId": "pc-torvald",
+          "targetId": "npc-goblin-1",
+          "actionName": "Longsword",
+          "declared": { "coverDegree": "half" }
+        }
+      }
+    },
+    {
+      "seq": 42,
+      "id": "evt-0042",
+      "causeId": "evt-0041",
+      "at": "2026-07-18T09:15:02.120Z",
+      "actor": { "kind": "engine" },
+      "visibility": "public",
+      "body": {
+        "t": "roll_made",
+        "rollId": "roll-777",
+        "kind": "attack_roll",
+        "d20": 9,
+        "secondD20": 14,
+        "collapsed": "disadvantage",
+        "sources": ["condition.prone"],
+        "modifiers": [
+          { "label": "STR", "value": 3 },
+          { "label": "Proficiency", "value": 2 },
+          { "label": "Bless (1d4)", "value": 3, "sourceId": "spell.bless" }
+        ],
+        "total": 17,
+        "vs": { "type": "ac", "value": 17 },
+        "outcome": "hit",
+        "entry": "server"
+      }
+    },
+    {
+      "seq": 43,
+      "id": "evt-0043",
+      "causeId": "evt-0041",
+      "at": "2026-07-18T09:15:02.140Z",
+      "actor": { "kind": "engine" },
+      "visibility": "public",
+      "body": {
+        "t": "damage_applied",
+        "creatureId": "npc-goblin-1",
+        "amount": 9,
+        "type": "slashing",
+        "breakdown": [
+          { "label": "Longsword (1d8)", "value": 6 },
+          { "label": "STR", "value": 3 }
+        ],
+        "adjusted": {},
+        "resultingHp": 1
+      }
+    },
+    {
+      "seq": 44,
+      "id": "evt-0044",
+      "causeId": "evt-0041",
+      "at": "2026-07-18T09:15:02.150Z",
+      "actor": { "kind": "engine" },
+      "visibility": "public",
+      "body": {
+        "t": "narration",
+        "text": "Torvald, fighting from the ground, still lands it — 9 slashing. The goblin is barely standing.",
+        "from": "engine"
+      }
+    },
+    {
+      "seq": 45,
+      "id": "evt-0045",
+      "at": "2026-07-18T09:15:20.000Z",
+      "actor": { "kind": "dm", "accountId": "acct-dm" },
+      "visibility": "dm_only",
+      "body": {
+        "t": "whisper_sent",
+        "text": "example dm-only event for the visibility filter test"
+      }
+    },
+    {
+      "seq": 46,
+      "id": "evt-0046",
+      "at": "2026-07-18T09:15:31.000Z",
+      "actor": { "kind": "dm", "accountId": "acct-dm" },
+      "visibility": "public",
+      "body": {
+        "t": "undo_applied",
+        "undoneCauseId": "evt-0041",
+        "reversedSeqs": [42, 43, 44]
+      }
+    }
+  ]
+}

@@ -1,41 +1,45 @@
-import type { CSSProperties, ReactNode, ReactElement } from 'react';
+/**
+ * Label — the quiet eyebrow above a value or a section.
+ *
+ * Half of the design's signature scale contrast: a whisper-quiet label over a
+ * loud value. Always faint, always small-caps, never competing with what it
+ * names.
+ */
+import type { CSSProperties, ReactNode } from 'react';
 
 export interface LabelProps {
-  children?: ReactNode;
-  /** dim (default) · faint · bright · accent (ember). */
-  tone?: 'dim' | 'faint' | 'bright' | 'accent';
-  /** Override color with any CSS color (e.g. a semantic token). */
-  accent?: string;
+  children: ReactNode;
+  /** Render as the element that owns it (e.g. a <legend>) when semantics demand. */
+  as?: 'span' | 'div' | 'legend';
+  htmlFor?: string;
+  id?: string;
+  className?: string;
   style?: CSSProperties;
 }
 
-/**
- * The micro-label: tiny, uppercase, wide-tracked mono. The HUD's connective tissue.
- * Pair a 10px Label directly over a large tabular number — that scale jump is the game feel.
- *
- * Ported from components/core/Label.jsx; reads only --qa-* tokens.
- */
-export function Label({ children, tone = 'dim', accent, style = {} }: LabelProps): ReactElement {
-  const color =
-    tone === 'accent'
-      ? 'var(--qa-ember)'
-      : tone === 'faint'
-        ? 'var(--qa-vellum-faint)'
-        : tone === 'bright'
-          ? 'var(--qa-vellum)'
-          : 'var(--qa-vellum-dim)';
+export function Label({ children, as = 'span', htmlFor, id, className, style }: LabelProps) {
+  const css: CSSProperties = {
+    display: 'block',
+    fontFamily: 'var(--qa-font-body)',
+    fontSize: '0.6875rem',
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: 'var(--qa-ink-faint)',
+    ...style,
+  };
+
+  if (htmlFor !== undefined) {
+    return (
+      <label htmlFor={htmlFor} id={id} className={className} style={css}>
+        {children}
+      </label>
+    );
+  }
+
+  const Tag = as;
   return (
-    <span
-      style={{
-        fontFamily: 'var(--qa-font-mono)',
-        fontSize: 10,
-        letterSpacing: 'var(--qa-track-label)',
-        textTransform: 'uppercase',
-        color: accent ?? color,
-        ...style,
-      }}
-    >
+    <Tag id={id} className={className} style={css}>
       {children}
-    </span>
+    </Tag>
   );
 }

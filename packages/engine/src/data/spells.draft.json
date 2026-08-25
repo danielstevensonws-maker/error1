@@ -7,7 +7,7 @@
     "version": "2026.07.0",
     "qa": "draft",
     "plain": "Acid Arrow — a level 2 evocation spell.",
-    "srd_text": "A shimmering green arrow streaks toward a target within range and bursts in a spray of acid. Make a ranged spell attack against the target. On a hit, the target takes 4d4 Acid damage and 2d4 Acid damage at the end of its next turn. On a miss, the arrow splashes the target with acid for half as much of the initial damage only. Using a Higher-Level Spell Slot. The damage (both initial and later) increases by 1d4 for each spell slot level above 2. Acid Splash Evocation Cantrip (Sorcerer, Wizard) Casting Time: Action Range: 60 feet Components: V, S Duration: Instantaneous You create an acidic bubble at a point within range, where it explodes in a 5-foot-radius Sphere. Each creature in that Sphere must succeed on a Dexterity saving throw or take 1d6 Acid damage. Cantrip Upgrade. The damage increases by 1d6 when you reach levels 5 (2d6), 11 (3d6), and 17 (4d6).",
+    "srd_text": "A shimmering green arrow streaks toward a target within range and bursts in a spray of acid. Make a ranged spell attack against the target. On a hit, the target takes 4d4 Acid damage and 2d4 Acid damage at the end of its next turn. On a miss, the arrow splashes the target with acid for half as much of the initial damage only. Using a Higher-Level Spell Slot. The damage (both initial and later) increases by 1d4 for each spell slot level above 2.",
     "effects": [],
     "resolution": "routine",
     "meta": {
@@ -25,6 +25,35 @@
       "concentration": false,
       "ritual": false,
       "classLists": [
+        "wizard"
+      ]
+    }
+  },
+  {
+    "id": "spell.acid-splash",
+    "entityType": "spell",
+    "name": "Acid Splash",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "Acid Splash — a level 0 evocation spell.",
+    "srd_text": "You create an acidic bubble at a point within range, where it explodes in a 5-foot-radius Sphere. Each creature in that Sphere must succeed on a Dexterity saving throw or take 1d6 Acid damage. Cantrip Upgrade. The damage increases by 1d6 when you reach levels 5 (2d6), 11 (3d6), and 17 (4d6).",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "evocation",
+      "castingTime": "action",
+      "rangeFt": 60,
+      "components": [
+        "v",
+        "s"
+      ],
+      "duration": "Instantaneous",
+      "concentration": false,
+      "ritual": false,
+      "classLists": [
+        "sorcerer",
         "wizard"
       ]
     }
@@ -1194,7 +1223,7 @@
     "version": "2026.07.0",
     "qa": "draft",
     "plain": "Charm Person — a level 1 enchantment spell.",
-    "srd_text": "One Humanoid you can see within range makes a Wisdom saving throw. It does so with Advantage if you or your allies are fighting it. On a failed save, the target has the Charmed condition until the spell ends or until you or your allies damage it. The Charmed creature is Friendly to you. When the spell ends, the target knows it was Charmed by you. Using a Higher-Level Spell Slot. You can target one additional creature for each spell slot level above 1. Chill Touch Necromancy Cantrip (Sorcerer, Warlock, Wizard) Casting Time: Action Range: Touch Components: V, S Duration: Instantaneous Channeling the chill of the grave, make a melee spell attack against a target within reach. On a hit, the target takes 1d10 Necrotic damage, and it can't regain Hit Points until the end of your next turn. Cantrip Upgrade. The damage increases by 1d10 when you reach levels 5 (2d10), 11 (3d10), and 17 (4d10).",
+    "srd_text": "One Humanoid you can see within range makes a Wisdom saving throw. It does so with Advantage if you or your allies are fighting it. On a failed save, the target has the Charmed condition until the spell ends or until you or your allies damage it. The Charmed creature is Friendly to you. When the spell ends, the target knows it was Charmed by you. Using a Higher-Level Spell Slot. You can target one additional creature for each spell slot level above 1.",
     "effects": [],
     "resolution": "routine",
     "meta": {
@@ -1212,6 +1241,36 @@
       "classLists": [
         "bard",
         "druid",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    }
+  },
+  {
+    "id": "spell.chill-touch",
+    "entityType": "spell",
+    "name": "Chill Touch",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "Chill Touch — a level 0 necromancy spell.",
+    "srd_text": "Channeling the chill of the grave, make a melee spell attack against a target within reach. On a hit, the target takes 1d10 Necrotic damage, and it can't regain Hit Points until the end of your next turn. Cantrip Upgrade. The damage increases by 1d10 when you reach levels 5 (2d10), 11 (3d10), and 17 (4d10).",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "necromancy",
+      "castingTime": "action",
+      "rangeFt": "touch",
+      "components": [
+        "v",
+        "s"
+      ],
+      "duration": "Instantaneous",
+      "concentration": false,
+      "ritual": false,
+      "classLists": [
         "sorcerer",
         "warlock",
         "wizard"
@@ -2134,7 +2193,7 @@
     "version": "2026.07.0",
     "qa": "draft",
     "plain": "Cure Wounds — a level 1 abjuration spell.",
-    "srd_text": "A creature you touch regains a number of Hit Points equal to 2d8 plus your spellcasting ability modifier. Using a Higher-Level Spell Slot. The healing increases by 2d8 for each spell slot level above 1. Dancing Lights Illusion Cantrip (Bard, Sorcerer, Wizard) Casting Time: Action Range: 120 feet Components: V, S, M (a bit of phosphorus) Duration: Concentration, up to 1 minute You create up to four torch-size lights within range, making them appear as torches, lanterns, or glowing orbs that hover for the duration. Alternatively, you combine the four lights into one glowing Medium form that is vaguely humanlike. Whichever form you choose, each light sheds Dim Light in a 10foot radius. As a Bonus Action, you can move the lights up to 60 feet to a space within range. A light must be within 20 feet of another light created by this spell, and a light vanishes if it exceeds the spell's range.",
+    "srd_text": "A creature you touch regains a number of Hit Points equal to 2d8 plus your spellcasting ability modifier. Using a Higher-Level Spell Slot. The healing increases by 2d8 for each spell slot level above 1.",
     "effects": [],
     "resolution": "routine",
     "meta": {
@@ -2155,6 +2214,38 @@
         "druid",
         "paladin",
         "ranger"
+      ]
+    }
+  },
+  {
+    "id": "spell.dancing-lights",
+    "entityType": "spell",
+    "name": "Dancing Lights",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "Dancing Lights — a level 0 illusion spell.",
+    "srd_text": "You create up to four torch-size lights within range, making them appear as torches, lanterns, or glowing orbs that hover for the duration. Alternatively, you combine the four lights into one glowing Medium form that is vaguely humanlike. Whichever form you choose, each light sheds Dim Light in a 10foot radius. As a Bonus Action, you can move the lights up to 60 feet to a space within range. A light must be within 20 feet of another light created by this spell, and a light vanishes if it exceeds the spell's range.",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "illusion",
+      "castingTime": "action",
+      "rangeFt": 120,
+      "components": [
+        "v",
+        "s",
+        "m"
+      ],
+      "materials": "a bit of phosphorus",
+      "duration": "Concentration, up to 1 minute",
+      "concentration": true,
+      "ritual": false,
+      "classLists": [
+        "bard",
+        "sorcerer",
+        "wizard"
       ]
     }
   },
@@ -2900,7 +2991,7 @@
     "version": "2026.07.0",
     "qa": "draft",
     "plain": "Dream — a level 5 illusion spell.",
-    "srd_text": "You target a creature you know on the same plane of existence. You or a willing creature you touch enters a trance state to act as a dream messenger. While in the trance, the messenger is Incapacitated and has a Speed of 0. If the target is asleep, the messenger appears in the target's dreams and can converse with the target as long as it remains asleep, through the spell's duration. The messenger can also shape the dream's environment, creating landscapes, objects, and other images. The messenger can emerge from the trance at any time, ending the spell. The target recalls the dream perfectly upon waking. If the target is awake when you cast the spell, the messenger knows it and can either end the trance (and the spell) or wait for the target to sleep, at which point the messenger enters its dreams. You can make the messenger terrifying to the target. If you do so, the messenger can deliver a message of no more than ten words, and then the target makes a Wisdom saving throw. On a failed save, the target gains no benefit from its rest, and it takes 3d6 Psychic damage when it wakes up. Druidcraft Transmutation Cantrip (Druid) Casting Time: Action Range: 30 feet Components: V, S Duration: Instantaneous Whispering to the spirits of nature, you create one of the following effects within range. Weather Sensor. You create a Tiny, harmless sensory effect that predicts what the weather will be at your location for the next 24 hours. The effect might manifest as a golden orb for clear skies, a cloud for rain, falling snowflakes for snow, and so on. This effect persists for 1 round. Bloom. You instantly make a flower blossom, a seed pod open, or a leaf bud bloom. Sensory Effect. You create a harmless sensory effect, such as falling leaves, spectral dancing fairies, a gentle breeze, the sound of an animal, or the faint odor of skunk. The effect must fit in a 5-foot Cube. Fire Play. You light or snuff out a candle, a torch, or a campfire.",
+    "srd_text": "You target a creature you know on the same plane of existence. You or a willing creature you touch enters a trance state to act as a dream messenger. While in the trance, the messenger is Incapacitated and has a Speed of 0. If the target is asleep, the messenger appears in the target's dreams and can converse with the target as long as it remains asleep, through the spell's duration. The messenger can also shape the dream's environment, creating landscapes, objects, and other images. The messenger can emerge from the trance at any time, ending the spell. The target recalls the dream perfectly upon waking. If the target is awake when you cast the spell, the messenger knows it and can either end the trance (and the spell) or wait for the target to sleep, at which point the messenger enters its dreams. You can make the messenger terrifying to the target. If you do so, the messenger can deliver a message of no more than ten words, and then the target makes a Wisdom saving throw. On a failed save, the target gains no benefit from its rest, and it takes 3d6 Psychic damage when it wakes up.",
     "effects": [],
     "resolution": "routine",
     "meta": {
@@ -2925,6 +3016,34 @@
     }
   },
   {
+    "id": "spell.druidcraft",
+    "entityType": "spell",
+    "name": "Druidcraft",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "Druidcraft — a level 0 transmutation spell.",
+    "srd_text": "Whispering to the spirits of nature, you create one of the following effects within range. Weather Sensor. You create a Tiny, harmless sensory effect that predicts what the weather will be at your location for the next 24 hours. The effect might manifest as a golden orb for clear skies, a cloud for rain, falling snowflakes for snow, and so on. This effect persists for 1 round. Bloom. You instantly make a flower blossom, a seed pod open, or a leaf bud bloom. Sensory Effect. You create a harmless sensory effect, such as falling leaves, spectral dancing fairies, a gentle breeze, the sound of an animal, or the faint odor of skunk. The effect must fit in a 5-foot Cube. Fire Play. You light or snuff out a candle, a torch, or a campfire.",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "transmutation",
+      "castingTime": "action",
+      "rangeFt": 30,
+      "components": [
+        "v",
+        "s"
+      ],
+      "duration": "Instantaneous",
+      "concentration": false,
+      "ritual": false,
+      "classLists": [
+        "druid"
+      ]
+    }
+  },
+  {
     "id": "spell.earthquake",
     "entityType": "spell",
     "name": "Earthquake",
@@ -2932,7 +3051,7 @@
     "version": "2026.07.0",
     "qa": "draft",
     "plain": "Earthquake — a level 8 transmutation spell.",
-    "srd_text": "Choose a point on the ground that you can see within range. For the duration, an intense tremor rips through the ground in a 100-foot-radius circle centered on that point. The ground there is Difficult Terrain. When you cast this spell and at the end of each of your turns for the duration, each creature on the ground in the area makes a Dexterity saving throw. On a failed save, a creature has the Prone condition, and its Concentration is broken. You can also cause the effects below. Fissures. A total of 1d6 fissures open in the spell's area at the end of the turn you cast it. You choose the fissures' locations, which can't be under structures. Each fissure is 1d10 � 10 feet deep and 10 feet wide, and it extends from one edge of the spell's area to another edge. A creature in the same space as a fissure must succeed on a Dexterity saving throw or fall in. A creature that successfully saves moves with the fissure's edge as it opens. Structures. The tremor deals 50 Bludgeoning damage to any structure in contact with the ground in the area when you cast the spell and at the end of each of your turns until the spell ends. If a structure drops to 0 Hit Points, it collapses. A creature within a distance from a collapsing structure equal to half the structure's height makes a Dexterity saving throw. On a failed save, the creature takes 12d6 Bludgeoning damage, has the Prone condition, and is buried in the rubble, requiring a DC 20 Strength (Athletics) check as an action to escape. On a successful save, the creature takes half as much damage only. Eldritch Blast Evocation Cantrip (Warlock) Casting Time: Action Range: 120 feet Components: V, S Duration: Instantaneous You hurl a beam of crackling energy. Make a ranged spell attack against one creature or object in range. On a hit, the target takes 1d10 Force damage. Cantrip Upgrade. The spell creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam. Elementalism Transmutation Cantrip (Druid, Sorcerer, Wizard) Casting Time: Action Range: 30 feet Components: V, S Duration: Instantaneous You exert control over the elements, creating one of the following effects within range. Beckon Air. You create a breeze strong enough to ripple cloth, stir dust, rustle leaves, and close open doors and shutters, all in a 5-foot Cube. Doors and shutters being held open by someone or something aren't affected. Beckon Earth. You create a thin shroud of dust or sand that covers surfaces in a 5-foot-square area, or you cause a single word to appear in your handwriting in a patch of dirt or sand. Beckon Fire. You create a thin cloud of harmless embers and colored, scented smoke in a 5-foot Cube. You choose the color and scent, and the embers can light candles, torches, or lamps in that area. The smoke's scent lingers for 1 minute. Beckon Water. You create a spray of cool mist that lightly dampens creatures and objects in a 5-foot Cube. Alternatively, you create 1 cup of clean water either in an open container or on a surface, and the water evaporates in 1 minute. Sculpt Element. You cause dirt, sand, fire, smoke, mist, or water that can fit in a 1-foot Cube to assume a crude shape (such as that of a creature) for 1 hour.",
+    "srd_text": "Choose a point on the ground that you can see within range. For the duration, an intense tremor rips through the ground in a 100-foot-radius circle centered on that point. The ground there is Difficult Terrain. When you cast this spell and at the end of each of your turns for the duration, each creature on the ground in the area makes a Dexterity saving throw. On a failed save, a creature has the Prone condition, and its Concentration is broken. You can also cause the effects below. Fissures. A total of 1d6 fissures open in the spell's area at the end of the turn you cast it. You choose the fissures' locations, which can't be under structures. Each fissure is 1d10 � 10 feet deep and 10 feet wide, and it extends from one edge of the spell's area to another edge. A creature in the same space as a fissure must succeed on a Dexterity saving throw or fall in. A creature that successfully saves moves with the fissure's edge as it opens. Structures. The tremor deals 50 Bludgeoning damage to any structure in contact with the ground in the area when you cast the spell and at the end of each of your turns until the spell ends. If a structure drops to 0 Hit Points, it collapses. A creature within a distance from a collapsing structure equal to half the structure's height makes a Dexterity saving throw. On a failed save, the creature takes 12d6 Bludgeoning damage, has the Prone condition, and is buried in the rubble, requiring a DC 20 Strength (Athletics) check as an action to escape. On a successful save, the creature takes half as much damage only.",
     "effects": [],
     "resolution": "routine",
     "meta": {
@@ -2953,6 +3072,64 @@
         "cleric",
         "druid",
         "sorcerer"
+      ]
+    }
+  },
+  {
+    "id": "spell.eldritch-blast",
+    "entityType": "spell",
+    "name": "Eldritch Blast",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "Eldritch Blast — a level 0 evocation spell.",
+    "srd_text": "You hurl a beam of crackling energy. Make a ranged spell attack against one creature or object in range. On a hit, the target takes 1d10 Force damage. Cantrip Upgrade. The spell creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam.",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "evocation",
+      "castingTime": "action",
+      "rangeFt": 120,
+      "components": [
+        "v",
+        "s"
+      ],
+      "duration": "Instantaneous",
+      "concentration": false,
+      "ritual": false,
+      "classLists": [
+        "warlock"
+      ]
+    }
+  },
+  {
+    "id": "spell.elementalism",
+    "entityType": "spell",
+    "name": "Elementalism",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "Elementalism — a level 0 transmutation spell.",
+    "srd_text": "You exert control over the elements, creating one of the following effects within range. Beckon Air. You create a breeze strong enough to ripple cloth, stir dust, rustle leaves, and close open doors and shutters, all in a 5-foot Cube. Doors and shutters being held open by someone or something aren't affected. Beckon Earth. You create a thin shroud of dust or sand that covers surfaces in a 5-foot-square area, or you cause a single word to appear in your handwriting in a patch of dirt or sand. Beckon Fire. You create a thin cloud of harmless embers and colored, scented smoke in a 5-foot Cube. You choose the color and scent, and the embers can light candles, torches, or lamps in that area. The smoke's scent lingers for 1 minute. Beckon Water. You create a spray of cool mist that lightly dampens creatures and objects in a 5-foot Cube. Alternatively, you create 1 cup of clean water either in an open container or on a surface, and the water evaporates in 1 minute. Sculpt Element. You cause dirt, sand, fire, smoke, mist, or water that can fit in a 1-foot Cube to assume a crude shape (such as that of a creature) for 1 hour.",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "transmutation",
+      "castingTime": "action",
+      "rangeFt": 30,
+      "components": [
+        "v",
+        "s"
+      ],
+      "duration": "Instantaneous",
+      "concentration": false,
+      "ritual": false,
+      "classLists": [
+        "druid",
+        "sorcerer",
+        "wizard"
       ]
     }
   },
@@ -3540,7 +3717,7 @@
     "version": "2026.07.0",
     "qa": "draft",
     "plain": "Find the Path — a level 6 divination spell.",
-    "srd_text": "You magically sense the most direct physical route to a location you name. You must be familiar with the location, and the spell fails if you name a destination on another plane of existence, a moving destination (such as a mobile fortress), or an unspecific destination (such as \"a green dragon's lair\"). For the duration, as long as you are on the same plane of existence as the destination, you know how far it is and in what direction it lies. Whenever you Fire Bolt Evocation Cantrip (Sorcerer, Wizard) Casting Time: Action Range: 120 feet Components: V, S Duration: Instantaneous You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Fire damage. A flammable object hit by this spell starts burning if it isn't being worn or carried. Cantrip Upgrade. The damage increases by 1d10 when you reach levels 5 (2d10), 11 (3d10), and 17 (4d10).",
+    "srd_text": "You magically sense the most direct physical route to a location you name. You must be familiar with the location, and the spell fails if you name a destination on another plane of existence, a moving destination (such as a mobile fortress), or an unspecific destination (such as \"a green dragon's lair\"). For the duration, as long as you are on the same plane of existence as the destination, you know how far it is and in what direction it lies. Whenever you",
     "effects": [],
     "resolution": "routine",
     "meta": {
@@ -3561,6 +3738,35 @@
         "bard",
         "cleric",
         "druid"
+      ]
+    }
+  },
+  {
+    "id": "spell.fire-bolt",
+    "entityType": "spell",
+    "name": "Fire Bolt",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "Fire Bolt — a level 0 evocation spell.",
+    "srd_text": "You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Fire damage. A flammable object hit by this spell starts burning if it isn't being worn or carried. Cantrip Upgrade. The damage increases by 1d10 when you reach levels 5 (2d10), 11 (3d10), and 17 (4d10).",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "evocation",
+      "castingTime": "action",
+      "rangeFt": 120,
+      "components": [
+        "v",
+        "s"
+      ],
+      "duration": "Instantaneous",
+      "concentration": false,
+      "ritual": false,
+      "classLists": [
+        "sorcerer",
+        "wizard"
       ]
     }
   },
@@ -4411,7 +4617,7 @@
     "version": "2026.07.0",
     "qa": "draft",
     "plain": "Guards and Wards — a level 6 abjuration spell.",
-    "srd_text": "You create a ward that protects up to 2,500 square feet of floor space. The warded area can be up to 20 feet tall, and you shape it as one 50-foot square, one hundred 5-foot squares that are contiguous, or twenty-five 10-foot squares that are contiguous. When you cast this spell, you can specify individuals that are unaffected by the spell's effects. You can also specify a password that, when spoken aloud within 5 feet of the warded area, makes the speaker immune to its effects. The spell creates the effects below within the warded area. Dispel Magic has no effect on Guards and Wards itself, but each of the following effects can be dispelled. If all four are dispelled, Guards and Wards ends. If you cast the spell every day for 365 days on the same area, the spell thereafter lasts until all its effects are dispelled. Corridors. Fog fills all the warded corridors, making them Heavily Obscured. In addition, at each intersection or branching passage offering a choice of direction, there is a 50 percent chance that a creature other than you believes it is going in the opposite direction from the one it chooses. Doors. All doors in the warded area are magically locked, as if sealed by the Arcane Lock spell. In addition, you can cover up to ten doors with an illusion to make them appear as plain sections of wall. Stairs. Webs fill all stairs in the warded area from top to bottom, as in the Web spell. These strands regrow in 10 minutes if they are destroyed while Guards and Wards lasts. Other Spell Effect. Place one of the following magical effects within the warded area: � Dancing Lights in four corridors, with a simple program that the lights repeat as long as Guards and Wards lasts � Magic Mouth in two locations � Stinking Cloud in two locations (the vapors return within 10 minutes if dispersed while Guards and Wards lasts) � Gust of Wind in one corridor or room (the wind blows continuously while the spell lasts) � Suggestion in one 5-foot square; any creature that enters that square receives the suggestion mentally Guidance Divination Cantrip (Cleric, Druid) Casting Time: Action Range: Touch Component: V, S Duration: Concentration, up to 1 minute You touch a willing creature and choose a skill. Until the spell ends, the creature adds 1d4 to any ability check using the chosen skill.",
+    "srd_text": "You create a ward that protects up to 2,500 square feet of floor space. The warded area can be up to 20 feet tall, and you shape it as one 50-foot square, one hundred 5-foot squares that are contiguous, or twenty-five 10-foot squares that are contiguous. When you cast this spell, you can specify individuals that are unaffected by the spell's effects. You can also specify a password that, when spoken aloud within 5 feet of the warded area, makes the speaker immune to its effects. The spell creates the effects below within the warded area. Dispel Magic has no effect on Guards and Wards itself, but each of the following effects can be dispelled. If all four are dispelled, Guards and Wards ends. If you cast the spell every day for 365 days on the same area, the spell thereafter lasts until all its effects are dispelled. Corridors. Fog fills all the warded corridors, making them Heavily Obscured. In addition, at each intersection or branching passage offering a choice of direction, there is a 50 percent chance that a creature other than you believes it is going in the opposite direction from the one it chooses. Doors. All doors in the warded area are magically locked, as if sealed by the Arcane Lock spell. In addition, you can cover up to ten doors with an illusion to make them appear as plain sections of wall. Stairs. Webs fill all stairs in the warded area from top to bottom, as in the Web spell. These strands regrow in 10 minutes if they are destroyed while Guards and Wards lasts. Other Spell Effect. Place one of the following magical effects within the warded area: � Dancing Lights in four corridors, with a simple program that the lights repeat as long as Guards and Wards lasts � Magic Mouth in two locations � Stinking Cloud in two locations (the vapors return within 10 minutes if dispersed while Guards and Wards lasts) � Gust of Wind in one corridor or room (the wind blows continuously while the spell lasts) � Suggestion in one 5-foot square; any creature that enters that square receives the suggestion mentally",
     "effects": [],
     "resolution": "routine",
     "meta": {
@@ -4431,6 +4637,35 @@
       "classLists": [
         "bard",
         "wizard"
+      ]
+    }
+  },
+  {
+    "id": "spell.guidance",
+    "entityType": "spell",
+    "name": "Guidance",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "Guidance — a level 0 divination spell.",
+    "srd_text": "You touch a willing creature and choose a skill. Until the spell ends, the creature adds 1d4 to any ability check using the chosen skill.",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "divination",
+      "castingTime": "action",
+      "rangeFt": "touch",
+      "components": [
+        "v",
+        "s"
+      ],
+      "duration": "Concentration, up to 1 minute",
+      "concentration": true,
+      "ritual": false,
+      "classLists": [
+        "cleric",
+        "druid"
       ]
     }
   },
@@ -5485,7 +5720,7 @@
     "version": "2026.07.0",
     "qa": "draft",
     "plain": "Levitate — a level 2 transmutation spell.",
-    "srd_text": "One creature or loose object of your choice that you can see within range rises vertically up to 20 feet and remains suspended there for the duration. The spell can levitate an object that weighs up to 500 pounds. An unwilling creature that succeeds on a Constitution saving throw is unaffected. The target can move only by pushing or pulling against a fixed object or surface within reach (such as a wall or a ceiling), which allows it to move as if it were climbing. You can change the target's altitude by up to 20 feet in either direction on your turn. If you are the target, you can move up or down as part of your move. Otherwise, you can take a Magic action to move the target, which must remain within the spell's range. When the spell ends, the target floats gently to the ground if it is still aloft. Light Evocation Cantrip (Bard, Cleric, Sorcerer, Wizard) Casting Time: Action Range: Touch Components: V, M (a firefly or phosphorescent moss) Duration: 1 hour You touch one Large or smaller object that isn't being worn or carried by someone else. Until the spell ends, the object sheds Bright Light in a 20-foot radius and Dim Light for an additional 20 feet. The light can be colored as you like. Covering the object with something opaque blocks the light. The spell ends if you cast it again.",
+    "srd_text": "One creature or loose object of your choice that you can see within range rises vertically up to 20 feet and remains suspended there for the duration. The spell can levitate an object that weighs up to 500 pounds. An unwilling creature that succeeds on a Constitution saving throw is unaffected. The target can move only by pushing or pulling against a fixed object or surface within reach (such as a wall or a ceiling), which allows it to move as if it were climbing. You can change the target's altitude by up to 20 feet in either direction on your turn. If you are the target, you can move up or down as part of your move. Otherwise, you can take a Magic action to move the target, which must remain within the spell's range. When the spell ends, the target floats gently to the ground if it is still aloft.",
     "effects": [],
     "resolution": "routine",
     "meta": {
@@ -5503,6 +5738,38 @@
       "concentration": true,
       "ritual": false,
       "classLists": [
+        "sorcerer",
+        "wizard"
+      ]
+    }
+  },
+  {
+    "id": "spell.light",
+    "entityType": "spell",
+    "name": "Light",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "Light — a level 0 evocation spell.",
+    "srd_text": "You touch one Large or smaller object that isn't being worn or carried by someone else. Until the spell ends, the object sheds Bright Light in a 20-foot radius and Dim Light for an additional 20 feet. The light can be colored as you like. Covering the object with something opaque blocks the light. The spell ends if you cast it again.",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "evocation",
+      "castingTime": "action",
+      "rangeFt": "touch",
+      "components": [
+        "v",
+        "m"
+      ],
+      "materials": "a firefly or phosphorescent moss",
+      "duration": "1 hour",
+      "concentration": false,
+      "ritual": false,
+      "classLists": [
+        "bard",
+        "cleric",
         "sorcerer",
         "wizard"
       ]
@@ -5682,7 +5949,7 @@
     "version": "2026.07.0",
     "qa": "draft",
     "plain": "Mage Armor — a level 1 abjuration spell.",
-    "srd_text": "You touch a willing creature who isn't wearing armor. Until the spell ends, the target's base AC becomes 13 plus its Dexterity modifier. The spell ends early if the target dons armor. Mage Hand Conjuration Cantrip (Bard, Sorcerer, Warlock, Wizard) Casting Time: Action Range: 30 feet Components: V, S Duration: 1 minute A spectral, floating hand appears at a point you choose within range. The hand lasts for the duration. The hand vanishes if it is ever more than 30 feet away from you or if you cast this spell again. When you cast the spell, you can use the hand to manipulate an object, open an unlocked door or container, stow or retrieve an item from an open container, or pour the contents out of a vial. As a Magic action on your later turns, you can control the hand thus again. As part of that action, you can move the hand up to 30 feet. The hand can't attack, activate magic items, or carry more than 10 pounds.",
+    "srd_text": "You touch a willing creature who isn't wearing armor. Until the spell ends, the target's base AC becomes 13 plus its Dexterity modifier. The spell ends early if the target dons armor.",
     "effects": [],
     "resolution": "routine",
     "meta": {
@@ -5701,6 +5968,37 @@
       "ritual": false,
       "classLists": [
         "sorcerer",
+        "wizard"
+      ]
+    }
+  },
+  {
+    "id": "spell.mage-hand",
+    "entityType": "spell",
+    "name": "Mage Hand",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "Mage Hand — a level 0 conjuration spell.",
+    "srd_text": "A spectral, floating hand appears at a point you choose within range. The hand lasts for the duration. The hand vanishes if it is ever more than 30 feet away from you or if you cast this spell again. When you cast the spell, you can use the hand to manipulate an object, open an unlocked door or container, stow or retrieve an item from an open container, or pour the contents out of a vial. As a Magic action on your later turns, you can control the hand thus again. As part of that action, you can move the hand up to 30 feet. The hand can't attack, activate magic items, or carry more than 10 pounds.",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "conjuration",
+      "castingTime": "action",
+      "rangeFt": 30,
+      "components": [
+        "v",
+        "s"
+      ],
+      "duration": "1 minute",
+      "concentration": false,
+      "ritual": false,
+      "classLists": [
+        "bard",
+        "sorcerer",
+        "warlock",
         "wizard"
       ]
     }
@@ -6076,7 +6374,7 @@
     "version": "2026.07.0",
     "qa": "draft",
     "plain": "Meld into Stone — a level 3 transmutation spell.",
-    "srd_text": "You step into a stone object or surface large enough to fully contain your body, merging yourself and your equipment with the stone for the duration. You must touch the stone to do so. Nothing of your presence remains visible or otherwise detectable by nonmagical senses. While merged with the stone, you can't see what occurs outside it, and any Wisdom (Perception) checks you make to hear sounds outside it are made with Disadvantage. You remain aware of the passage of time and can cast spells on yourself while merged in the stone. You can use 5 feet of movement to leave the stone where you entered it, which ends the spell. You otherwise can't move. Minor physical damage to the stone doesn't harm you, but its partial destruction or a change in its shape (to the extent that you no longer fit within it) expels you and deals 6d6 Force damage to you. The stone's complete destruction (or transmutation into a different substance) expels you and deals 50 Force damage to you. If expelled, you move into an unoccupied space closest to where you first entered and have the Prone condition. Mending Transmutation Cantrip (Bard, Cleric, Druid, Sorcerer, Wizard) Casting Time: 1 minute Range: Touch Components: V, S, M (two lodestones) Duration: Instantaneous This spell repairs a single break or tear in an object you touch, such as a broken chain link, two halves of a broken key, a torn cloak, or a leaking wineskin. As long as the break or tear is no larger than 1 foot in any dimension, you mend it, leaving no trace of the former damage. This spell can physically repair a magic item, but it can't restore magic to such an object. Message Transmutation Cantrip (Bard, Druid, Sorcerer, Wizard) Casting Time: Action Range: 120 feet Components: S, M (a copper wire) Duration: 1 round You point toward a creature within range and whisper a message. The target (and only the target) hears the message and can reply in a whisper that only you can hear. You can cast this spell through solid objects if you are familiar with the target and know it is beyond the barrier. Magical silence; 1 foot of stone, metal, or wood; or a thin sheet of lead blocks the spell.",
+    "srd_text": "You step into a stone object or surface large enough to fully contain your body, merging yourself and your equipment with the stone for the duration. You must touch the stone to do so. Nothing of your presence remains visible or otherwise detectable by nonmagical senses. While merged with the stone, you can't see what occurs outside it, and any Wisdom (Perception) checks you make to hear sounds outside it are made with Disadvantage. You remain aware of the passage of time and can cast spells on yourself while merged in the stone. You can use 5 feet of movement to leave the stone where you entered it, which ends the spell. You otherwise can't move. Minor physical damage to the stone doesn't harm you, but its partial destruction or a change in its shape (to the extent that you no longer fit within it) expels you and deals 6d6 Force damage to you. The stone's complete destruction (or transmutation into a different substance) expels you and deals 50 Force damage to you. If expelled, you move into an unoccupied space closest to where you first entered and have the Prone condition.",
     "effects": [],
     "resolution": "routine",
     "meta": {
@@ -6095,6 +6393,72 @@
         "cleric",
         "druid",
         "ranger"
+      ]
+    }
+  },
+  {
+    "id": "spell.mending",
+    "entityType": "spell",
+    "name": "Mending",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "Mending — a level 0 transmutation spell.",
+    "srd_text": "This spell repairs a single break or tear in an object you touch, such as a broken chain link, two halves of a broken key, a torn cloak, or a leaking wineskin. As long as the break or tear is no larger than 1 foot in any dimension, you mend it, leaving no trace of the former damage. This spell can physically repair a magic item, but it can't restore magic to such an object.",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "transmutation",
+      "castingTime": "minute_1",
+      "rangeFt": "touch",
+      "components": [
+        "v",
+        "s",
+        "m"
+      ],
+      "materials": "two lodestones",
+      "duration": "Instantaneous",
+      "concentration": false,
+      "ritual": false,
+      "classLists": [
+        "bard",
+        "cleric",
+        "druid",
+        "sorcerer",
+        "wizard"
+      ]
+    }
+  },
+  {
+    "id": "spell.message",
+    "entityType": "spell",
+    "name": "Message",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "Message — a level 0 transmutation spell.",
+    "srd_text": "You point toward a creature within range and whisper a message. The target (and only the target) hears the message and can reply in a whisper that only you can hear. You can cast this spell through solid objects if you are familiar with the target and know it is beyond the barrier. Magical silence; 1 foot of stone, metal, or wood; or a thin sheet of lead blocks the spell.",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "transmutation",
+      "castingTime": "action",
+      "rangeFt": 120,
+      "components": [
+        "s",
+        "m"
+      ],
+      "materials": "a copper wire",
+      "duration": "1 round",
+      "concentration": false,
+      "ritual": false,
+      "classLists": [
+        "bard",
+        "druid",
+        "sorcerer",
+        "wizard"
       ]
     }
   },
@@ -6164,7 +6528,7 @@
     "version": "2026.07.0",
     "qa": "draft",
     "plain": "Mind Spike — a level 2 divination spell.",
-    "srd_text": "You drive a spike of psionic energy into the mind of one creature you can see within range. The target makes a Wisdom saving throw, taking 3d8 Psychic damage on a failed save or half as much damage on a successful one. On a failed save, you also always know the target's location until the spell ends, but only while the two of you are on the same plane of existence. While you have this knowledge, the target can't become hidden from you, and if it has the Invisible condition, it gains no benefit from that condition against you. Using a Higher-Level Spell Slot. The damage increases by 1d8 for each spell slot level above 2. Minor Illusion Illusion Cantrip (Bard, Sorcerer, Warlock, Wizard) Casting Time: Action Range: 30 feet Components: S, M (a bit of fleece) Duration: 1 minute You create a sound or an image of an object within range that lasts for the duration. See the descriptions below for the effects of each. The illusion ends if you cast this spell again. If a creature takes a Study action to examine the sound or image, the creature can determine that it is an illusion with a successful Intelligence (Investigation) check against your spell save DC. If a creature discerns the illusion for what it is, the illusion becomes faint to the creature. Sound. If you create a sound, its volume can range from a whisper to a scream. It can be your voice, someone else's voice, a lion's roar, a beating of drums, or any other sound you choose. The sound continues unabated throughout the duration, or you can make discrete sounds at different times before the spell ends. Image. If you create an image of an object--such as a chair, muddy footprints, or a small chest--it must be no larger than a 5-foot Cube. The image can't create sound, light, smell, or any other sensory effect. Physical interaction with the image reveals it to be an illusion, since things can pass through it.",
+    "srd_text": "You drive a spike of psionic energy into the mind of one creature you can see within range. The target makes a Wisdom saving throw, taking 3d8 Psychic damage on a failed save or half as much damage on a successful one. On a failed save, you also always know the target's location until the spell ends, but only while the two of you are on the same plane of existence. While you have this knowledge, the target can't become hidden from you, and if it has the Invisible condition, it gains no benefit from that condition against you. Using a Higher-Level Spell Slot. The damage increases by 1d8 for each spell slot level above 2.",
     "effects": [],
     "resolution": "routine",
     "meta": {
@@ -6179,6 +6543,38 @@
       "concentration": true,
       "ritual": false,
       "classLists": [
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    }
+  },
+  {
+    "id": "spell.minor-illusion",
+    "entityType": "spell",
+    "name": "Minor Illusion",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "Minor Illusion — a level 0 illusion spell.",
+    "srd_text": "You create a sound or an image of an object within range that lasts for the duration. See the descriptions below for the effects of each. The illusion ends if you cast this spell again. If a creature takes a Study action to examine the sound or image, the creature can determine that it is an illusion with a successful Intelligence (Investigation) check against your spell save DC. If a creature discerns the illusion for what it is, the illusion becomes faint to the creature. Sound. If you create a sound, its volume can range from a whisper to a scream. It can be your voice, someone else's voice, a lion's roar, a beating of drums, or any other sound you choose. The sound continues unabated throughout the duration, or you can make discrete sounds at different times before the spell ends. Image. If you create an image of an object--such as a chair, muddy footprints, or a small chest--it must be no larger than a 5-foot Cube. The image can't create sound, light, smell, or any other sensory effect. Physical interaction with the image reveals it to be an illusion, since things can pass through it.",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "illusion",
+      "castingTime": "action",
+      "rangeFt": 30,
+      "components": [
+        "s",
+        "m"
+      ],
+      "materials": "a bit of fleece",
+      "duration": "1 minute",
+      "concentration": false,
+      "ritual": false,
+      "classLists": [
+        "bard",
         "sorcerer",
         "warlock",
         "wizard"
@@ -6681,7 +7077,7 @@
     "version": "2026.07.0",
     "qa": "draft",
     "plain": "Plant Growth — a level 3 transmutation spell.",
-    "srd_text": "This spell channels vitality into plants. The casting time you use determines whether the spell has the Overgrowth or the Enrichment effect below. Overgrowth. Choose a point within range. All normal plants in a 100-foot-radius Sphere centered on that point become thick and overgrown. A creature moving through that area must spend 4 feet of movement for every 1 foot it moves. You can exclude one or more areas of any size within the spell's area from being affected. Enrichment. All plants in a half-mile radius centered on a point within range become enriched for 365 days. The plants yield twice the normal amount of food when harvested. They can benefit from only one Plant Growth per year. Poison Spray Necromancy Cantrip (Druid, Sorcerer, Warlock, Wizard) Casting Time: Action Range: 30 feet Components: V, S Duration: Instantaneous You spray toxic mist at a creature within range. Make a ranged spell attack against the target. On a hit, the target takes 1d12 Poison damage. Cantrip Upgrade. The damage increases by 1d12 when you reach levels 5 (2d12), 11 (3d12), and 17 (4d12).",
+    "srd_text": "This spell channels vitality into plants. The casting time you use determines whether the spell has the Overgrowth or the Enrichment effect below. Overgrowth. Choose a point within range. All normal plants in a 100-foot-radius Sphere centered on that point become thick and overgrown. A creature moving through that area must spend 4 feet of movement for every 1 foot it moves. You can exclude one or more areas of any size within the spell's area from being affected. Enrichment. All plants in a half-mile radius centered on a point within range become enriched for 365 days. The plants yield twice the normal amount of food when harvested. They can benefit from only one Plant Growth per year.",
     "effects": [],
     "resolution": "routine",
     "meta": {
@@ -6700,6 +7096,37 @@
         "bard",
         "druid",
         "ranger"
+      ]
+    }
+  },
+  {
+    "id": "spell.poison-spray",
+    "entityType": "spell",
+    "name": "Poison Spray",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "Poison Spray — a level 0 necromancy spell.",
+    "srd_text": "You spray toxic mist at a creature within range. Make a ranged spell attack against the target. On a hit, the target takes 1d12 Poison damage. Cantrip Upgrade. The damage increases by 1d12 when you reach levels 5 (2d12), 11 (3d12), and 17 (4d12).",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "necromancy",
+      "castingTime": "action",
+      "rangeFt": 30,
+      "components": [
+        "v",
+        "s"
+      ],
+      "duration": "Instantaneous",
+      "concentration": false,
+      "ritual": false,
+      "classLists": [
+        "druid",
+        "sorcerer",
+        "warlock",
+        "wizard"
       ]
     }
   },
@@ -6832,7 +7259,7 @@
     "version": "2026.07.0",
     "qa": "draft",
     "plain": "Prayer of Healing — a level 2 abjuration spell.",
-    "srd_text": "Up to five creatures of your choice who remain within range for the spell's entire casting gain the benefits of a Short Rest and also regain 2d8 Hit Points. A creature can't be affected by this spell again until that creature finishes a Long Rest. Using a Higher-Level Spell Slot. The healing increases by 1d8 for each spell slot level above 2. Prestidigitation Transmutation Cantrip (Bard, Sorcerer, Warlock, Wizard) Casting Time: Action Range: 10 feet Components: V, S Duration: Up to 1 hour You create a magical effect within range. Choose the effect from the options below. If you cast this spell multiple times, you can have up to three of its non-instantaneous effects active at a time. Sensory Effect. You create an instantaneous, harmless sensory effect, such as a shower of sparks, a puff of wind, faint musical notes, or an odd odor. Fire Play. You instantaneously light or snuff out a candle, a torch, or a small campfire. Clean or Soil. You instantaneously clean or soil an object no larger than 1 cubic foot. Minor Sensation. You chill, warm, or flavor up to 1 cubic foot of nonliving material for 1 hour. Magic Mark. You make a color, a small mark, or a symbol appear on an object or a surface for 1 hour. Minor Creation. You create a nonmagical trinket or an illusory image that can fit in your hand. It lasts until the end of your next turn. A trinket can deal no damage and has no monetary worth.",
+    "srd_text": "Up to five creatures of your choice who remain within range for the spell's entire casting gain the benefits of a Short Rest and also regain 2d8 Hit Points. A creature can't be affected by this spell again until that creature finishes a Long Rest. Using a Higher-Level Spell Slot. The healing increases by 1d8 for each spell slot level above 2.",
     "effects": [],
     "resolution": "routine",
     "meta": {
@@ -6849,6 +7276,37 @@
       "classLists": [
         "cleric",
         "paladin"
+      ]
+    }
+  },
+  {
+    "id": "spell.prestidigitation",
+    "entityType": "spell",
+    "name": "Prestidigitation",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "Prestidigitation — a level 0 transmutation spell.",
+    "srd_text": "You create a magical effect within range. Choose the effect from the options below. If you cast this spell multiple times, you can have up to three of its non-instantaneous effects active at a time. Sensory Effect. You create an instantaneous, harmless sensory effect, such as a shower of sparks, a puff of wind, faint musical notes, or an odd odor. Fire Play. You instantaneously light or snuff out a candle, a torch, or a small campfire. Clean or Soil. You instantaneously clean or soil an object no larger than 1 cubic foot. Minor Sensation. You chill, warm, or flavor up to 1 cubic foot of nonliving material for 1 hour. Magic Mark. You make a color, a small mark, or a symbol appear on an object or a surface for 1 hour. Minor Creation. You create a nonmagical trinket or an illusory image that can fit in your hand. It lasts until the end of your next turn. A trinket can deal no damage and has no monetary worth.",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "transmutation",
+      "castingTime": "action",
+      "rangeFt": 10,
+      "components": [
+        "v",
+        "s"
+      ],
+      "duration": "Up to 1 hour",
+      "concentration": false,
+      "ritual": false,
+      "classLists": [
+        "bard",
+        "sorcerer",
+        "warlock",
+        "wizard"
       ]
     }
   },
@@ -6919,7 +7377,7 @@
     "version": "2026.07.0",
     "qa": "draft",
     "plain": "Private Sanctum — a level 4 abjuration spell.",
-    "srd_text": "You make an area within range magically secure. The area is a Cube that can be as small as 5 feet to as large as 100 feet on each side. The spell lasts for the duration. When you cast the spell, you decide what sort of security the spell provides, choosing any of the following properties: � Sound can't pass through the barrier at the edge of the warded area. � The barrier of the warded area appears dark and foggy, preventing vision (including Darkvision) through it. � Sensors created by Divination spells can't appear inside the protected area or pass through the barrier at its perimeter. � Creatures in the area can't be targeted by Divination spells. � Nothing can teleport into or out of the warded area. � Planar travel is blocked within the warded area. Casting this spell on the same spot every day for 365 days makes the spell last until dispelled. Using a Higher-Level Spell Slot. You can increase the size of the Cube by 100 feet for each spell slot level above 4. Produce Flame Conjuration Cantrip (Druid) Casting Time: Bonus Action Range: Self Components: V, S Duration: 10 minutes A flickering flame appears in your hand and remains there for the duration. While there, the flame emits no heat and ignites nothing, and it sheds Bright Light in a 20-foot radius and Dim Light for an additional 20 feet. The spell ends if you cast it again. Until the spell ends, you can take a Magic action to hurl fire at a creature or an object within 60 feet of you. Make a ranged spell attack. On a hit, the target takes 1d8 Fire damage. Cantrip Upgrade. The damage increases by 1d8 when you reach levels 5 (2d8), 11 (3d8), and 17 (4d8).",
+    "srd_text": "You make an area within range magically secure. The area is a Cube that can be as small as 5 feet to as large as 100 feet on each side. The spell lasts for the duration. When you cast the spell, you decide what sort of security the spell provides, choosing any of the following properties: � Sound can't pass through the barrier at the edge of the warded area. � The barrier of the warded area appears dark and foggy, preventing vision (including Darkvision) through it. � Sensors created by Divination spells can't appear inside the protected area or pass through the barrier at its perimeter. � Creatures in the area can't be targeted by Divination spells. � Nothing can teleport into or out of the warded area. � Planar travel is blocked within the warded area. Casting this spell on the same spot every day for 365 days makes the spell last until dispelled. Using a Higher-Level Spell Slot. You can increase the size of the Cube by 100 feet for each spell slot level above 4.",
     "effects": [],
     "resolution": "routine",
     "meta": {
@@ -6938,6 +7396,34 @@
       "ritual": false,
       "classLists": [
         "wizard"
+      ]
+    }
+  },
+  {
+    "id": "spell.produce-flame",
+    "entityType": "spell",
+    "name": "Produce Flame",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "Produce Flame — a level 0 conjuration spell.",
+    "srd_text": "A flickering flame appears in your hand and remains there for the duration. While there, the flame emits no heat and ignites nothing, and it sheds Bright Light in a 20-foot radius and Dim Light for an additional 20 feet. The spell ends if you cast it again. Until the spell ends, you can take a Magic action to hurl fire at a creature or an object within 60 feet of you. Make a ranged spell attack. On a hit, the target takes 1d8 Fire damage. Cantrip Upgrade. The damage increases by 1d8 when you reach levels 5 (2d8), 11 (3d8), and 17 (4d8).",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "conjuration",
+      "castingTime": "bonus_action",
+      "rangeFt": "self",
+      "components": [
+        "v",
+        "s"
+      ],
+      "duration": "10 minutes",
+      "concentration": false,
+      "ritual": false,
+      "classLists": [
+        "druid"
       ]
     }
   },
@@ -7170,7 +7656,7 @@
     "version": "2026.07.0",
     "qa": "draft",
     "plain": "Ray of Enfeeblement — a level 2 necromancy spell.",
-    "srd_text": "A beam of enervating energy shoots from you toward a creature within range. The target must make a Constitution saving throw. On a successful save, the target has Disadvantage on the next attack roll it makes until the start of your next turn. On a failed save, the target has Disadvantage on Strength-based D20 Tests for the duration. During that time, it also subtracts 1d8 from all its damage rolls. The target repeats the save at the end of each of its turns, ending the spell on a success. Ray of Frost Evocation Cantrip (Sorcerer, Wizard) Casting Time: Action Range: 60 feet Components: V, S Duration: Instantaneous A frigid beam of blue-white light streaks toward a creature within range. Make a ranged spell attack against the target. On a hit, it takes 1d8 Cold damage, and its Speed is reduced by 10 feet until the start of your next turn. Cantrip Upgrade. The damage increases by 1d8 when you reach levels 5 (2d8), 11 (3d8), and 17 (4d8).",
+    "srd_text": "A beam of enervating energy shoots from you toward a creature within range. The target must make a Constitution saving throw. On a successful save, the target has Disadvantage on the next attack roll it makes until the start of your next turn. On a failed save, the target has Disadvantage on Strength-based D20 Tests for the duration. During that time, it also subtracts 1d8 from all its damage rolls. The target repeats the save at the end of each of its turns, ending the spell on a success.",
     "effects": [],
     "resolution": "routine",
     "meta": {
@@ -7187,6 +7673,35 @@
       "ritual": false,
       "classLists": [
         "warlock",
+        "wizard"
+      ]
+    }
+  },
+  {
+    "id": "spell.ray-of-frost",
+    "entityType": "spell",
+    "name": "Ray of Frost",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "Ray of Frost — a level 0 evocation spell.",
+    "srd_text": "A frigid beam of blue-white light streaks toward a creature within range. Make a ranged spell attack against the target. On a hit, it takes 1d8 Cold damage, and its Speed is reduced by 10 feet until the start of your next turn. Cantrip Upgrade. The damage increases by 1d8 when you reach levels 5 (2d8), 11 (3d8), and 17 (4d8).",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "evocation",
+      "castingTime": "action",
+      "rangeFt": 60,
+      "components": [
+        "v",
+        "s"
+      ],
+      "duration": "Instantaneous",
+      "concentration": false,
+      "ritual": false,
+      "classLists": [
+        "sorcerer",
         "wizard"
       ]
     }
@@ -7321,7 +7836,7 @@
     "version": "2026.07.0",
     "qa": "draft",
     "plain": "Resilient Sphere — a level 4 abjuration spell.",
-    "srd_text": "A shimmering sphere encloses a Large or smaller creature or object within range. An unwilling creature must succeed on a Dexterity saving throw or be enclosed for the duration. Nothing--not physical objects, energy, or other spell effects--can pass through the barrier, in or out, though a creature in the sphere can breathe there. The sphere is immune to all damage, and a creature or object inside can't be damaged by attacks or effects originating from outside, nor can a creature inside the sphere damage anything outside it. The sphere is weightless and just large enough to contain the creature or object inside. An enclosed creature can take an action to push against the sphere's walls and thus roll the sphere at up to half the creature's Speed. Similarly, the globe can be picked up and moved by other creatures. A Disintegrate spell targeting the globe destroys it without harming anything inside. Resistance Abjuration Cantrip (Cleric, Druid) Casting Time: Action Range: Touch Component: V, S Duration: Concentration, up to 1 minute You touch a willing creature and choose a damage type: Acid, Bludgeoning, Cold, Fire, Lightning, Necrotic, Piercing, Poison, Radiant, Slashing, or Thunder. When the creature takes damage of the chosen type before the spell ends, the creature reduces the total damage taken by 1d4. A creature can benefit from this spell only once per turn.",
+    "srd_text": "A shimmering sphere encloses a Large or smaller creature or object within range. An unwilling creature must succeed on a Dexterity saving throw or be enclosed for the duration. Nothing--not physical objects, energy, or other spell effects--can pass through the barrier, in or out, though a creature in the sphere can breathe there. The sphere is immune to all damage, and a creature or object inside can't be damaged by attacks or effects originating from outside, nor can a creature inside the sphere damage anything outside it. The sphere is weightless and just large enough to contain the creature or object inside. An enclosed creature can take an action to push against the sphere's walls and thus roll the sphere at up to half the creature's Speed. Similarly, the globe can be picked up and moved by other creatures. A Disintegrate spell targeting the globe destroys it without harming anything inside.",
     "effects": [],
     "resolution": "routine",
     "meta": {
@@ -7340,6 +7855,35 @@
       "ritual": false,
       "classLists": [
         "wizard"
+      ]
+    }
+  },
+  {
+    "id": "spell.resistance",
+    "entityType": "spell",
+    "name": "Resistance",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "Resistance — a level 0 abjuration spell.",
+    "srd_text": "You touch a willing creature and choose a damage type: Acid, Bludgeoning, Cold, Fire, Lightning, Necrotic, Piercing, Poison, Radiant, Slashing, or Thunder. When the creature takes damage of the chosen type before the spell ends, the creature reduces the total damage taken by 1d4. A creature can benefit from this spell only once per turn.",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "abjuration",
+      "castingTime": "action",
+      "rangeFt": "touch",
+      "components": [
+        "v",
+        "s"
+      ],
+      "duration": "Concentration, up to 1 minute",
+      "concentration": true,
+      "ritual": false,
+      "classLists": [
+        "cleric",
+        "druid"
       ]
     }
   },
@@ -7447,7 +7991,7 @@
     "version": "2026.07.0",
     "qa": "draft",
     "plain": "Rope Trick — a level 2 transmutation spell.",
-    "srd_text": "You touch a rope. One end of it hovers upward until the rope hangs perpendicular to the ground or the rope reaches a ceiling. At the rope's upper end, an Invisible 3-foot-by-5-foot portal opens to an extra dimensional space that lasts until the spell ends. That space can be reached by climbing the rope, which can be pulled into or dropped out of it. The space can hold up to eight Medium or smaller creatures. Attacks, spells, and other effects can't pass into or out of the space, but creatures inside it can see through the portal. Anything inside the space drops out when the spell ends. Sacred Flame Evocation Cantrip (Cleric) Casting Time: Action Range: 60 feet Components: V, S Duration: Instantaneous Flame-like radiance descends on a creature that you can see within range. The target must succeed on a Dexterity saving throw or take 1d8 Radiant damage. The target gains no benefit from Half Cover or Three-Quarters Cover for this save. Cantrip Upgrade. The damage increases by 1d8 when you reach levels 5 (2d8), 11 (3d8), and 17 (4d8).",
+    "srd_text": "You touch a rope. One end of it hovers upward until the rope hangs perpendicular to the ground or the rope reaches a ceiling. At the rope's upper end, an Invisible 3-foot-by-5-foot portal opens to an extra dimensional space that lasts until the spell ends. That space can be reached by climbing the rope, which can be pulled into or dropped out of it. The space can hold up to eight Medium or smaller creatures. Attacks, spells, and other effects can't pass into or out of the space, but creatures inside it can see through the portal. Anything inside the space drops out when the spell ends.",
     "effects": [],
     "resolution": "routine",
     "meta": {
@@ -7466,6 +8010,34 @@
       "ritual": false,
       "classLists": [
         "wizard"
+      ]
+    }
+  },
+  {
+    "id": "spell.sacred-flame",
+    "entityType": "spell",
+    "name": "Sacred Flame",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "Sacred Flame — a level 0 evocation spell.",
+    "srd_text": "Flame-like radiance descends on a creature that you can see within range. The target must succeed on a Dexterity saving throw or take 1d8 Radiant damage. The target gains no benefit from Half Cover or Three-Quarters Cover for this save. Cantrip Upgrade. The damage increases by 1d8 when you reach levels 5 (2d8), 11 (3d8), and 17 (4d8).",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "evocation",
+      "castingTime": "action",
+      "rangeFt": 60,
+      "components": [
+        "v",
+        "s"
+      ],
+      "duration": "Instantaneous",
+      "concentration": false,
+      "ritual": false,
+      "classLists": [
+        "cleric"
       ]
     }
   },
@@ -7843,7 +8415,7 @@
     "version": "2026.07.0",
     "qa": "draft",
     "plain": "Shield of Faith — a level 1 abjuration spell.",
-    "srd_text": "A shimmering field surrounds a creature of your choice within range, granting it a +2 bonus to AC for the duration. Shillelagh Transmutation Cantrip (Druid) Casting Time: Bonus Action Range: Self Components: V, S, M (mistletoe) Duration: 1 minute A Club or Quarterstaff you are holding is imbued with nature's power. For the duration, you can use your spellcasting ability instead of Strength for the attack and damage rolls of melee attacks using that weapon, and the weapon's damage die becomes a d8. If the attack deals damage, it can be Force damage or the weapon's normal damage type (your choice). The spell ends early if you cast it again or if you let go of the weapon. Cantrip Upgrade. The damage die changes when you reach levels 5 (d10), 11 (d12), and 17 (2d6).",
+    "srd_text": "A shimmering field surrounds a creature of your choice within range, granting it a +2 bonus to AC for the duration.",
     "effects": [],
     "resolution": "routine",
     "meta": {
@@ -7867,6 +8439,36 @@
     }
   },
   {
+    "id": "spell.shillelagh",
+    "entityType": "spell",
+    "name": "Shillelagh",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "Shillelagh — a level 0 transmutation spell.",
+    "srd_text": "A Club or Quarterstaff you are holding is imbued with nature's power. For the duration, you can use your spellcasting ability instead of Strength for the attack and damage rolls of melee attacks using that weapon, and the weapon's damage die becomes a d8. If the attack deals damage, it can be Force damage or the weapon's normal damage type (your choice). The spell ends early if you cast it again or if you let go of the weapon. Cantrip Upgrade. The damage die changes when you reach levels 5 (d10), 11 (d12), and 17 (2d6).",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "transmutation",
+      "castingTime": "bonus_action",
+      "rangeFt": "self",
+      "components": [
+        "v",
+        "s",
+        "m"
+      ],
+      "materials": "mistletoe",
+      "duration": "1 minute",
+      "concentration": false,
+      "ritual": false,
+      "classLists": [
+        "druid"
+      ]
+    }
+  },
+  {
     "id": "spell.shining-smite",
     "entityType": "spell",
     "name": "Shining Smite",
@@ -7874,7 +8476,7 @@
     "version": "2026.07.0",
     "qa": "draft",
     "plain": "Shining Smite — a level 2 transmutation spell.",
-    "srd_text": "The target hit by the strike takes an extra 2d6 Radiant damage from the attack. Until the spell ends, the target sheds Bright Light in a 5-foot radius, attack rolls against it have Advantage, and it can't benefit from the Invisible condition. Using a Higher-Level Spell Slot. The damage increases by 1d6 for each spell slot level above 2. Shocking Grasp Evocation Cantrip (Sorcerer, Wizard) Casting Time: Action Range: Touch Components: V, S Duration: Instantaneous Lightning springs from you to a creature that you try to touch. Make a melee spell attack against the target. On a hit, the target takes 1d8 Lightning damage, and it can't make Opportunity Attacks until the start of its next turn. Cantrip Upgrade. The damage increases by 1d8 when you reach levels 5 (2d8), 11 (3d8), and 17 (4d8).",
+    "srd_text": "The target hit by the strike takes an extra 2d6 Radiant damage from the attack. Until the spell ends, the target sheds Bright Light in a 5-foot radius, attack rolls against it have Advantage, and it can't benefit from the Invisible condition. Using a Higher-Level Spell Slot. The damage increases by 1d6 for each spell slot level above 2.",
     "effects": [],
     "resolution": "routine",
     "meta": {
@@ -7890,6 +8492,35 @@
       "ritual": false,
       "classLists": [
         "paladin"
+      ]
+    }
+  },
+  {
+    "id": "spell.shocking-grasp",
+    "entityType": "spell",
+    "name": "Shocking Grasp",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "Shocking Grasp — a level 0 evocation spell.",
+    "srd_text": "Lightning springs from you to a creature that you try to touch. Make a melee spell attack against the target. On a hit, the target takes 1d8 Lightning damage, and it can't make Opportunity Attacks until the start of its next turn. Cantrip Upgrade. The damage increases by 1d8 when you reach levels 5 (2d8), 11 (3d8), and 17 (4d8).",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "evocation",
+      "castingTime": "action",
+      "rangeFt": "touch",
+      "components": [
+        "v",
+        "s"
+      ],
+      "duration": "Instantaneous",
+      "concentration": false,
+      "ritual": false,
+      "classLists": [
+        "sorcerer",
+        "wizard"
       ]
     }
   },
@@ -8057,7 +8688,7 @@
     "version": "2026.07.0",
     "qa": "draft",
     "plain": "Slow — a level 3 transmutation spell.",
-    "srd_text": "You alter time around up to six creatures of your choice in a 40-foot Cube within range. Each target must succeed on a Wisdom saving throw or be affected by this spell for the duration. An affected target's Speed is halved, it takes a -2 penalty to AC and Dexterity saving throws, and it can't take Reactions. On its turns, it can take either an action or a Bonus Action, not both, and it can make only one attack if it takes the Attack action. If it casts a spell with a Somatic component, there is a 25 percent chance the spell fails as a result of the target making the spell's gestures too slowly. An affected target repeats the save at the end of each of its turns, ending the spell on itself on a success. Sorcerous Burst Evocation Cantrip (Sorcerer) Casting Time: Action Range: 120 feet Component: V, S Duration: Instantaneous You cast sorcerous energy at one creature or object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d8 damage of a type you choose: Acid, Cold, Fire, Lightning, Poison, Psychic, or Thunder. If you roll an 8 on a d8 for this spell, you can roll another d8, and add it to the damage. When you cast this spell, the maximum number of these d8s you can add to the spell's damage equals your spellcasting ability modifier. Cantrip Upgrade. The damage increases by 1d8 when you reach levels 5 (2d8), 11 (3d8), and 17 (4d8). Spare the Dying Necromancy Cantrip (Cleric, Druid) Casting Time: Action Range: 15 feet Components: V, S Duration: Instantaneous Choose a creature within range that has 0 Hit Points and isn't dead. The creature becomes Stable. Cantrip Upgrade. The range doubles when you reach levels 5 (30 feet), 11 (60 feet), and 17 (120 feet).",
+    "srd_text": "You alter time around up to six creatures of your choice in a 40-foot Cube within range. Each target must succeed on a Wisdom saving throw or be affected by this spell for the duration. An affected target's Speed is halved, it takes a -2 penalty to AC and Dexterity saving throws, and it can't take Reactions. On its turns, it can take either an action or a Bonus Action, not both, and it can make only one attack if it takes the Attack action. If it casts a spell with a Somatic component, there is a 25 percent chance the spell fails as a result of the target making the spell's gestures too slowly. An affected target repeats the save at the end of each of its turns, ending the spell on itself on a success.",
     "effects": [],
     "resolution": "routine",
     "meta": {
@@ -8078,6 +8709,63 @@
         "bard",
         "sorcerer",
         "wizard"
+      ]
+    }
+  },
+  {
+    "id": "spell.sorcerous-burst",
+    "entityType": "spell",
+    "name": "Sorcerous Burst",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "Sorcerous Burst — a level 0 evocation spell.",
+    "srd_text": "You cast sorcerous energy at one creature or object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d8 damage of a type you choose: Acid, Cold, Fire, Lightning, Poison, Psychic, or Thunder. If you roll an 8 on a d8 for this spell, you can roll another d8, and add it to the damage. When you cast this spell, the maximum number of these d8s you can add to the spell's damage equals your spellcasting ability modifier. Cantrip Upgrade. The damage increases by 1d8 when you reach levels 5 (2d8), 11 (3d8), and 17 (4d8).",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "evocation",
+      "castingTime": "action",
+      "rangeFt": 120,
+      "components": [
+        "v",
+        "s"
+      ],
+      "duration": "Instantaneous",
+      "concentration": false,
+      "ritual": false,
+      "classLists": [
+        "sorcerer"
+      ]
+    }
+  },
+  {
+    "id": "spell.spare-the-dying",
+    "entityType": "spell",
+    "name": "Spare the Dying",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "Spare the Dying — a level 0 necromancy spell.",
+    "srd_text": "Choose a creature within range that has 0 Hit Points and isn't dead. The creature becomes Stable. Cantrip Upgrade. The range doubles when you reach levels 5 (30 feet), 11 (60 feet), and 17 (120 feet).",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "necromancy",
+      "castingTime": "action",
+      "rangeFt": 15,
+      "components": [
+        "v",
+        "s"
+      ],
+      "duration": "Instantaneous",
+      "concentration": false,
+      "ritual": false,
+      "classLists": [
+        "cleric",
+        "druid"
       ]
     }
   },
@@ -8275,7 +8963,7 @@
     "version": "2026.07.0",
     "qa": "draft",
     "plain": "Spiritual Weapon — a level 2 evocation spell.",
-    "srd_text": "You create a floating, spectral force that resembles a weapon of your choice and lasts for the duration. The force appears within range in a space of your choice, and you can immediately make one melee spell attack against one creature within 5 feet of the force. On a hit, the target takes Force damage equal to 1d8 plus your spellcasting ability modifier. As a Bonus Action on your later turns, you can move the force up to 20 feet and repeat the attack against a creature within 5 feet of it. Using a Higher-Level Spell Slot. The damage increases by 1d8 for every slot level above 2. Starry Wisp Evocation Cantrip (Bard, Druid) Casting Time: Action Range: 60 feet Components: V, S Duration: Instantaneous You launch a mote of light at one creature or object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d8 Radiant damage, and until the end of your next turn, it emits Dim Light in a 10-foot radius and can't benefit from the Invisible condition. Cantrip Upgrade. The damage increases by 1d8 when you reach levels 5 (2d8), 11 (3d8), and 17 (4d8).",
+    "srd_text": "You create a floating, spectral force that resembles a weapon of your choice and lasts for the duration. The force appears within range in a space of your choice, and you can immediately make one melee spell attack against one creature within 5 feet of the force. On a hit, the target takes Force damage equal to 1d8 plus your spellcasting ability modifier. As a Bonus Action on your later turns, you can move the force up to 20 feet and repeat the attack against a creature within 5 feet of it. Using a Higher-Level Spell Slot. The damage increases by 1d8 for every slot level above 2.",
     "effects": [],
     "resolution": "routine",
     "meta": {
@@ -8292,6 +8980,35 @@
       "ritual": false,
       "classLists": [
         "cleric"
+      ]
+    }
+  },
+  {
+    "id": "spell.starry-wisp",
+    "entityType": "spell",
+    "name": "Starry Wisp",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "Starry Wisp — a level 0 evocation spell.",
+    "srd_text": "You launch a mote of light at one creature or object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d8 Radiant damage, and until the end of your next turn, it emits Dim Light in a 10-foot radius and can't benefit from the Invisible condition. Cantrip Upgrade. The damage increases by 1d8 when you reach levels 5 (2d8), 11 (3d8), and 17 (4d8).",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "evocation",
+      "castingTime": "action",
+      "rangeFt": 60,
+      "components": [
+        "v",
+        "s"
+      ],
+      "duration": "Instantaneous",
+      "concentration": false,
+      "ritual": false,
+      "classLists": [
+        "bard",
+        "druid"
       ]
     }
   },
@@ -8678,7 +9395,7 @@
     "version": "2026.07.0",
     "qa": "draft",
     "plain": "Teleportation Circle — a level 5 conjuration spell.",
-    "srd_text": "As you cast the spell, you draw a 5-foot-radius circle on the ground inscribed with sigils that link your location to a permanent teleportation circle of your choice whose sigil sequence you know and that is on the same plane of existence as you. A shimmering portal opens within the circle you drew and remains open until the end of your next turn. Any creature that enters the portal instantly appears within 5 feet of the destination circle or in the nearest unoccupied space if that space is occupied. Many major temples, guildhalls, and other important places have permanent teleportation circles. Each circle includes a unique sigil sequence--a string of runes arranged in a particular pattern. When you first gain the ability to cast this spell, you learn the sigil sequences for two destinations on the Material Plane, determined by the GM. You might learn additional sigil sequences during your adventures. You can commit a new sigil sequence to memory after studying it for 1 minute. You can create a permanent teleportation circle by casting this spell in the same location every day for 365 days. Thaumaturgy Transmutation Cantrip (Cleric) Casting Time: Action Range: 30 feet Components: V Duration: Up to 1 minute You manifest a minor wonder within range. You create one of the effects below within range. If you cast this spell multiple times, you can have up to three of its 1-minute effects active at a time. Altered Eyes. You alter the appearance of your eyes for 1 minute. Booming Voice. Your voice booms up to three times as loud as normal for 1 minute. For the duration, you have Advantage on Charisma (Intimidation) checks. Fire Play. You cause flames to flicker, brighten, dim, or change color for 1 minute. Invisible Hand. You instantaneously cause an unlocked door or window to fly open or slam shut. Phantom Sound. You create an instantaneous sound that originates from a point of your choice within range, such as a rumble of thunder, the cry of a raven, or ominous whispers. Tremors. You cause harmless tremors in the ground for 1 minute.",
+    "srd_text": "As you cast the spell, you draw a 5-foot-radius circle on the ground inscribed with sigils that link your location to a permanent teleportation circle of your choice whose sigil sequence you know and that is on the same plane of existence as you. A shimmering portal opens within the circle you drew and remains open until the end of your next turn. Any creature that enters the portal instantly appears within 5 feet of the destination circle or in the nearest unoccupied space if that space is occupied. Many major temples, guildhalls, and other important places have permanent teleportation circles. Each circle includes a unique sigil sequence--a string of runes arranged in a particular pattern. When you first gain the ability to cast this spell, you learn the sigil sequences for two destinations on the Material Plane, determined by the GM. You might learn additional sigil sequences during your adventures. You can commit a new sigil sequence to memory after studying it for 1 minute. You can create a permanent teleportation circle by casting this spell in the same location every day for 365 days.",
     "effects": [],
     "resolution": "routine",
     "meta": {
@@ -8699,6 +9416,33 @@
         "sorcerer",
         "warlock",
         "wizard"
+      ]
+    }
+  },
+  {
+    "id": "spell.thaumaturgy",
+    "entityType": "spell",
+    "name": "Thaumaturgy",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "Thaumaturgy — a level 0 transmutation spell.",
+    "srd_text": "You manifest a minor wonder within range. You create one of the effects below within range. If you cast this spell multiple times, you can have up to three of its 1-minute effects active at a time. Altered Eyes. You alter the appearance of your eyes for 1 minute. Booming Voice. Your voice booms up to three times as loud as normal for 1 minute. For the duration, you have Advantage on Charisma (Intimidation) checks. Fire Play. You cause flames to flicker, brighten, dim, or change color for 1 minute. Invisible Hand. You instantaneously cause an unlocked door or window to fly open or slam shut. Phantom Sound. You create an instantaneous sound that originates from a point of your choice within range, such as a rumble of thunder, the cry of a raven, or ominous whispers. Tremors. You cause harmless tremors in the ground for 1 minute.",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "transmutation",
+      "castingTime": "action",
+      "rangeFt": 30,
+      "components": [
+        "v"
+      ],
+      "duration": "Up to 1 minute",
+      "concentration": false,
+      "ritual": false,
+      "classLists": [
+        "cleric"
       ]
     }
   },
@@ -8953,7 +9697,7 @@
     "version": "2026.07.0",
     "qa": "draft",
     "plain": "True Seeing — a level 6 divination spell.",
-    "srd_text": "For the duration, the willing creature you touch has Truesight with a range of 120 feet. True Strike Divination Cantrip (Bard, Sorcerer, Warlock, Wizard) Casting Time: Action Range: Self Components: S, M (a weapon with which you have proficiency and that is worth 1+ CP) Duration: Instantaneous Guided by a flash of magical insight, you make one attack with the weapon used in the spell's casting. The attack uses your spellcasting ability for the attack and damage rolls instead of using Strength or Dexterity. If the attack deals damage, it can be Radiant damage or the weapon's normal damage type (your choice). Cantrip Upgrade. Whether you deal Radiant damage or the weapon's normal damage type, the attack deals extra Radiant damage when you reach levels 5 (1d6), 11 (2d6), and 17 (3d6).",
+    "srd_text": "For the duration, the willing creature you touch has Truesight with a range of 120 feet.",
     "effects": [],
     "resolution": "routine",
     "meta": {
@@ -8973,6 +9717,38 @@
       "classLists": [
         "bard",
         "cleric",
+        "sorcerer",
+        "warlock",
+        "wizard"
+      ]
+    }
+  },
+  {
+    "id": "spell.true-strike",
+    "entityType": "spell",
+    "name": "True Strike",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "True Strike — a level 0 divination spell.",
+    "srd_text": "Guided by a flash of magical insight, you make one attack with the weapon used in the spell's casting. The attack uses your spellcasting ability for the attack and damage rolls instead of using Strength or Dexterity. If the attack deals damage, it can be Radiant damage or the weapon's normal damage type (your choice). Cantrip Upgrade. Whether you deal Radiant damage or the weapon's normal damage type, the attack deals extra Radiant damage when you reach levels 5 (1d6), 11 (2d6), and 17 (3d6).",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "divination",
+      "castingTime": "action",
+      "rangeFt": "self",
+      "components": [
+        "s",
+        "m"
+      ],
+      "materials": "a weapon with which you have profi- ciency and that is worth 1+ CP",
+      "duration": "Instantaneous",
+      "concentration": false,
+      "ritual": false,
+      "classLists": [
+        "bard",
         "sorcerer",
         "warlock",
         "wizard"
@@ -9047,7 +9823,7 @@
     "version": "2026.07.0",
     "qa": "draft",
     "plain": "Vampiric Touch — a level 3 necromancy spell.",
-    "srd_text": "The touch of your shadow-wreathed hand can siphon life force from others to heal your wounds. Make a melee spell attack against one creature within reach. On a hit, the target takes 3d6 Necrotic damage, and you regain Hit Points equal to half the amount of Necrotic damage dealt. Until the spell ends, you can make the attack again on each of your turns as a Magic action, targeting the same creature or a different one. Using a Higher-Level Spell Slot. The damage increases by 1d6 for each spell slot level above 3. Vicious Mockery Enchantment Cantrip (Bard) Casting Time: Action Range: 60 feet Components: V Duration: Instantaneous You unleash a string of insults laced with subtle enchantments at one creature you can see or hear within range. The target must succeed on a Wisdom saving throw or take 1d6 Psychic damage and have Disadvantage on the next attack roll it makes before the end of its next turn. Cantrip Upgrade. The damage increases by 1d6 when you reach levels 5 (2d6), 11 (3d6), and 17 (4d6).",
+    "srd_text": "The touch of your shadow-wreathed hand can siphon life force from others to heal your wounds. Make a melee spell attack against one creature within reach. On a hit, the target takes 3d6 Necrotic damage, and you regain Hit Points equal to half the amount of Necrotic damage dealt. Until the spell ends, you can make the attack again on each of your turns as a Magic action, targeting the same creature or a different one. Using a Higher-Level Spell Slot. The damage increases by 1d6 for each spell slot level above 3.",
     "effects": [],
     "resolution": "routine",
     "meta": {
@@ -9066,6 +9842,33 @@
         "sorcerer",
         "warlock",
         "wizard"
+      ]
+    }
+  },
+  {
+    "id": "spell.vicious-mockery",
+    "entityType": "spell",
+    "name": "Vicious Mockery",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "draft",
+    "plain": "Vicious Mockery — a level 0 enchantment spell.",
+    "srd_text": "You unleash a string of insults laced with subtle enchantments at one creature you can see or hear within range. The target must succeed on a Wisdom saving throw or take 1d6 Psychic damage and have Disadvantage on the next attack roll it makes before the end of its next turn. Cantrip Upgrade. The damage increases by 1d6 when you reach levels 5 (2d6), 11 (3d6), and 17 (4d6).",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "level": 0,
+      "school": "enchantment",
+      "castingTime": "action",
+      "rangeFt": 60,
+      "components": [
+        "v"
+      ],
+      "duration": "Instantaneous",
+      "concentration": false,
+      "ritual": false,
+      "classLists": [
+        "bard"
       ]
     }
   },

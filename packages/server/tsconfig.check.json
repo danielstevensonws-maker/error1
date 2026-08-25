@@ -1,0 +1,31 @@
+{
+  /*
+   * THE TYPECHECK CONFIG, WHICH IS A SUPERSET OF THE BUILD CONFIG.
+   *
+   * WHY THIS FILE EXISTS. `tsconfig.json` is the BUILD: it emits to `dist` with
+   * `rootDir: "src"`, so it cannot also cover `test/` — a test file is not
+   * under the root dir and has no business in the published output. The result
+   * was that `npm run check` ran `tsc` over the source only, and nineteen test
+   * files were never typechecked at all.
+   *
+   * That is not a theoretical gap. When `IntentResolver` grew a fourth argument
+   * (2026-08-25), `tsc` passed clean and the suite then failed at RUNTIME on a
+   * property of `undefined` — the kind of error a typechecker exists to catch,
+   * in the one place nobody was looking. Tests are source; they get the same
+   * strictness as everything else, including `noUncheckedIndexedAccess` and
+   * `exactOptionalPropertyTypes`.
+   *
+   * `build` still uses `tsconfig.json`, so `dist` is unchanged.
+   */
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    /* Nothing is written from here: this config only asks whether the code is
+       well typed. `rootDir` is widened to the package so the test tree is a
+       legal input rather than "outside rootDir", and the emit flags are turned
+       off so widening it cannot produce output by accident. */
+    "noEmit": true,
+    "rootDir": ".",
+    "declaration": false
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts"]
+}

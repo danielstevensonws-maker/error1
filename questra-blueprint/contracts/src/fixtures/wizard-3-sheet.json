@@ -1,0 +1,67 @@
+{
+  "abilities": {
+    "str": { "value": 8, "derivation": [{ "label": "Base", "value": 8 }] },
+    "dex": { "value": 14, "derivation": [{ "label": "Base", "value": 14 }] },
+    "con": { "value": 13, "derivation": [{ "label": "Base", "value": 13 }] },
+    "int": { "value": 16, "derivation": [{ "label": "Base", "value": 14 }, { "label": "Background", "value": 2 }] },
+    "wis": { "value": 12, "derivation": [{ "label": "Base", "value": 12 }] },
+    "cha": { "value": 10, "derivation": [{ "label": "Base", "value": 10 }] }
+  },
+  "profBonus": { "value": 2, "derivation": [{ "label": "Level 3", "value": 2 }] },
+  "hp": {
+    "value": { "max": 18, "hitDie": "d6", "hitDiceMax": 3 },
+    "derivation": [
+      { "label": "Hit die (max at level 1)", "value": 6 },
+      { "label": "CON x1", "value": 1 },
+      { "label": "Levels 2-3 (average d6 = 4 each)", "value": 8 },
+      { "label": "CON x2 (levels 2-3)", "value": 2 },
+      { "label": "CON x1 (level 1)", "value": 1 }
+    ]
+  },
+  "acOptions": [
+    { "value": 12, "derivation": [{ "label": "Unarmored", "value": 10 }, { "label": "DEX", "value": 2 }] }
+  ],
+  "acDefault": 0,
+  "initiative": { "value": 2, "derivation": [{ "label": "DEX", "value": 2 }] },
+  "saves": {
+    "str": { "value": -1, "derivation": [{ "label": "STR", "value": -1 }] },
+    "dex": { "value": 2, "derivation": [{ "label": "DEX", "value": 2 }] },
+    "con": { "value": 1, "derivation": [{ "label": "CON", "value": 1 }] },
+    "int": { "value": 5, "derivation": [{ "label": "INT", "value": 3 }, { "label": "Proficiency", "value": 2 }] },
+    "wis": { "value": 3, "derivation": [{ "label": "WIS", "value": 1 }, { "label": "Proficiency", "value": 2 }] },
+    "cha": { "value": 0, "derivation": [{ "label": "CHA", "value": 0 }] }
+  },
+  "skills": {
+    "arcana": { "value": 5, "derivation": [{ "label": "INT", "value": 3 }, { "label": "Proficiency", "value": 2 }] },
+    "investigation": { "value": 5, "derivation": [{ "label": "INT", "value": 3 }, { "label": "Proficiency", "value": 2 }] }
+  },
+  "passives": {
+    "perception": { "value": 11, "derivation": [{ "label": "Base", "value": 10 }, { "label": "WIS", "value": 1 }] },
+    "investigation": { "value": 15, "derivation": [{ "label": "Base", "value": 10 }, { "label": "INT", "value": 3 }, { "label": "Proficiency", "value": 2 }] },
+    "insight": { "value": 11, "derivation": [{ "label": "Base", "value": 10 }, { "label": "WIS", "value": 1 }] }
+  },
+  "speedFt": { "value": 30, "derivation": [{ "label": "Species", "value": 30 }] },
+  "attacks": [
+    {
+      "name": "Dagger",
+      "toHit": 4,
+      "toHitDerivation": [{ "label": "DEX", "value": 2 }, { "label": "Proficiency", "value": 2 }],
+      "damage": "1d4 + 2",
+      "damageType": "piercing",
+      "ability": "dex",
+      "tags": ["action", "melee", "finesse"]
+    }
+  ],
+  "features": [
+    { "id": "feature.wizard.spellcasting", "name": "Spellcasting" },
+    { "id": "feature.wizard.arcane-recovery", "name": "Arcane Recovery" }
+  ],
+  "spellcasting": {
+    "ability": "int",
+    "saveDc": { "value": 13, "derivation": [{ "label": "Base", "value": 8 }, { "label": "Proficiency", "value": 2 }, { "label": "INT", "value": 3 }] },
+    "attackBonus": { "value": 5, "derivation": [{ "label": "Proficiency", "value": 2 }, { "label": "INT", "value": 3 }] },
+    "slots": { "1": 4, "2": 2 },
+    "prepared": []
+  },
+  "coins": { "cp": 0, "sp": 0, "ep": 0, "gp": 0, "pp": 0 }
+}

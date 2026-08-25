@@ -1,118 +1,108 @@
 /**
- * PublicSecretField stories — the public/secret split in its two shapes
- * (single-line for a cast entry, multiline for scene notes), restyled to the
- * Questra V1 Prototype sheet. The story shows how each half maps to the
- * contracts visibility it must be emitted with (VISIBILITY_FOR), reinforcing
- * that the split resolves to public vs dm_only — and that the gold tint is a
- * reminder, never the filter (which is server-side).
+ * Primitives/PublicSecretField — the DM-authoring public/secret split.
+ *
+ * No `--qa-secret` token exists yet (see the component's own doc comment and
+ * packages/theme/test/tokens.test.ts), so both stories render the neutral,
+ * provisional accent — restyle once Design supplies the real tint.
+ *
+ * Both stories render a live "Emitted" panel below the field, reading
+ * straight from `VISIBILITY_FOR` — the seam to the wire made visible: this
+ * isn't just an input, it's proof the split resolves to real contracts
+ * `Visibility` values, not a UI-only convention.
  */
-import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Label } from '@questra/ui';
-import { PublicSecretField, VISIBILITY_FOR, type PublicSecretValue } from './PublicSecretField.js';
-import { TableBackdrop } from './TableBackdrop.js';
+import type { ReactNode } from 'react';
+import { useState } from 'react';
+import { PublicSecretField, VISIBILITY_FOR } from './PublicSecretField.js';
+import type { PublicSecretValue } from './PublicSecretField.js';
 
-import '@questra/theme/styles.css';
-import '../theme/index.css';
-
-const meta: Meta<typeof PublicSecretField> = {
-  title: 'Primitives/PublicSecretField',
-  component: PublicSecretField,
-  // authoring UI still sits in the product's dark room — judge it there
-  decorators: [(Story) => <TableBackdrop height={520} center><Story /></TableBackdrop>],
-};
-export default meta;
-type Story = StoryObj<typeof PublicSecretField>;
-
-function Frame({ children }: { children: React.ReactNode }) {
-  return <div style={{ width: 380 }}>{children}</div>;
+function AuthoringPanel({ children }: { children: ReactNode }) {
+  return (
+    <div
+      style={{
+        maxWidth: 480,
+        margin: '48px auto',
+        padding: 'var(--qa-s5)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 'var(--qa-s4)',
+        background: 'var(--qa-glass-solid)',
+        border: 'var(--qa-hairline) solid var(--qa-glass-border)',
+        borderRadius: 'var(--qa-radius-lg)',
+      }}
+    >
+      {children}
+    </div>
+  );
 }
 
-/** A cast member: public name/role everyone sees, a secret motive only the DM sees. */
-export const CastEntry: Story = {
-  render: () => {
-    const [v, setV] = useState<PublicSecretValue>({
-      public: 'Sister Aldous — kindly almoner',
-      secret: "She is the cult's paymaster.",
-    });
-    return (
-      <Frame>
-        <PublicSecretField
-          label="Cast entry"
-          value={v}
-          onChange={setV}
-          help="The table meets the public face; the truth stays with you."
-        />
-        <Emitted value={v} />
-      </Frame>
-    );
-  },
-};
-
-/** Scene notes: multiline. Public read-aloud + secret DM staging. */
-export const SceneNotes: Story = {
-  render: () => {
-    const [v, setV] = useState<PublicSecretValue>({
-      public: 'Lantern light spills from the almshouse door, and someone inside is singing.',
-      secret: 'Two cutpurses in the loft. Perception DC 13 to hear the floorboard.',
-    });
-    return (
-      <Frame>
-        <PublicSecretField label="Scene notes" value={v} onChange={setV} multiline />
-        <Emitted value={v} />
-      </Frame>
-    );
-  },
-};
-
-/**
- * Empty — both halves at rest, showing the placeholders that state the audience
- * plainly. Focus either half to see the one focus ring (--qa-focus-ring).
- */
-export const Empty: Story = {
-  render: () => {
-    const [v, setV] = useState<PublicSecretValue>({ public: '', secret: '' });
-    return (
-      <Frame>
-        <PublicSecretField label="Location" value={v} onChange={setV} />
-        <Emitted value={v} />
-      </Frame>
-    );
-  },
-};
-
-/** Shows the contracts visibility each half is emitted with — the seam to the wire. */
+/** The live wire-visibility readout — proves the split isn't just a UI convention. */
 function Emitted({ value }: { value: PublicSecretValue }) {
-  void value;
+  const rowStyle = { display: 'flex', gap: 'var(--qa-s2)' };
+  const keyStyle = { color: 'var(--qa-ink-faint)' };
+  const valStyle = { color: 'var(--qa-ink)' };
   return (
     <dl
       style={{
-        margin: '10px 0 0',
-        padding: '9px 12px',
-        border: '1px solid var(--qa-hairline-soft)',
-        borderRadius: 'var(--qa-radius-sm)',
-        background: 'var(--qa-ink)',
+        margin: 0,
         display: 'flex',
         flexDirection: 'column',
-        gap: 3,
+        gap: 4,
+        fontFamily: 'var(--qa-font-mono)',
+        fontSize: 'var(--qa-text-whisper)',
+        letterSpacing: 'var(--qa-tracking-caps)',
       }}
     >
-      <div style={{ display: 'flex', gap: 10 }}>
-        <dt><Label tone="faint" style={{ textTransform: 'none' }}>public</Label></dt>
-        <dd style={{ margin: 0 }}>
-          <Label tone="dim" style={{ textTransform: 'none' }}>
-            → {JSON.stringify(VISIBILITY_FOR.public)}
-          </Label>
-        </dd>
-      </div>
-      <div style={{ display: 'flex', gap: 10 }}>
-        <dt><Label tone="faint" style={{ textTransform: 'none' }}>secret</Label></dt>
-        <dd style={{ margin: 0 }}>
-          <Label accent="var(--qa-secret)" style={{ textTransform: 'none' }}>
-            → {JSON.stringify(VISIBILITY_FOR.secret)}
-          </Label>
-        </dd>
-      </div>
+      {(Object.keys(VISIBILITY_FOR) as Array<keyof PublicSecretValue>).map((half) => (
+        <div key={half} style={rowStyle}>
+          <dt style={keyStyle}>{half} →</dt>
+          <dd style={{ ...valStyle, margin: 0 }}>&quot;{String(VISIBILITY_FOR[half])}&quot;</dd>
+        </div>
+      ))}
     </dl>
   );
 }
+
+const meta: Meta = {
+  title: 'Primitives/PublicSecretField',
+  component: PublicSecretField,
+  parameters: { layout: 'fullscreen' },
+};
+export default meta;
+type Story = StoryObj;
+
+/** Single-line — a cast entry with a public role and a secret motive. */
+export const CastEntry: Story = {
+  render: function CastEntryStory() {
+    const [value, setValue] = useState<PublicSecretValue>({
+      public: 'Sister Aldous, keeper of the small shrine',
+      secret: "The cult's paymaster — every coin that reaches the Ashfen goblins passes through her hands first.",
+    });
+    return (
+      <AuthoringPanel>
+        <PublicSecretField
+          value={value}
+          onChange={setValue}
+          help="The table meets the public face; the truth stays with you."
+        />
+        <Emitted value={value} />
+      </AuthoringPanel>
+    );
+  },
+};
+
+/** Multiline — scene notes: public read-aloud plus secret staging. */
+export const SceneNotes: Story = {
+  render: function SceneNotesStory() {
+    const [value, setValue] = useState<PublicSecretValue>({
+      public: 'The tavern common room is loud tonight — a bard is losing an argument with the bar about her tab.',
+      secret: 'Two cutpurses are working the room. Perception DC 13 to notice a hand near a belt pouch.',
+    });
+    return (
+      <AuthoringPanel>
+        <PublicSecretField value={value} onChange={setValue} multiline />
+        <Emitted value={value} />
+      </AuthoringPanel>
+    );
+  },
+};

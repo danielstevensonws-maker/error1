@@ -14,6 +14,10 @@ import { ClientIntentEnvelopeSchema, PlayEventSchema } from './events.js';
 const ID = z.string().min(1);
 const ViewerRoleSchema = z.enum(['dm', 'player', 'table_display']);
 
+/** The six screen effects a DM can trigger (Brief 10 §4). */
+export const EffectIdSchema = z.enum(['shake', 'torch', 'rain', 'thunder', 'blood', 'fade']);
+export type EffectId = z.infer<typeof EffectIdSchema>;
+
 // ---- client → server -----------------------------------------------------
 
 export const ClientMsgSchema = z.discriminatedUnion('m', [
@@ -22,6 +26,18 @@ export const ClientMsgSchema = z.discriminatedUnion('m', [
   z.object({ m: z.literal('ruling_response'), promptId: ID, response: z.unknown() }),
   z.object({ m: z.literal('prompt_response'), promptId: ID, response: z.unknown() }),
   z.object({ m: z.literal('ping') }),
+  /**
+   * A screen effect (Brief 10 §4): thunder, rain, a shake.
+   *
+   * DELIBERATELY NOT AN EVENT. Effects have no replay value — nobody
+   * reconnecting to a session wants the last hour of weather replayed at them,
+   * and a log full of "shake" buries the story it exists to hold. They are
+   * broadcast, they land, they are gone. Everything the composer sends is the
+   * opposite, and the dividing line is whether it belongs to the play RECORD.
+   *
+   * The server accepts these only from whoever runs the game.
+   */
+  z.object({ m: z.literal('effect'), effect: EffectIdSchema }),
 ]);
 export type ClientMsg = z.infer<typeof ClientMsgSchema>;
 
@@ -38,6 +54,9 @@ export const ServerMsgSchema = z.discriminatedUnion('m', [
   z.object({ m: z.literal('intent_rejected'), idempotencyKey: z.string(), reason: z.string() }),
   z.object({ m: z.literal('presence'), connected: z.array(z.object({ accountId: ID, role: ViewerRoleSchema })), activeCreatureId: ID.optional() }),
   z.object({ m: z.literal('pong') }),
+  /* The effect, on its way out to everybody. Ephemeral: never stored, never
+     replayed — a viewer who was not connected simply missed the thunder. */
+  z.object({ m: z.literal('effect'), effect: EffectIdSchema }),
   z.object({ m: z.literal('error'), code: z.enum(['auth', 'not_member', 'bad_message', 'rate_limited']), detail: z.string().optional() }),
 ]);
 export type ServerMsg = z.infer<typeof ServerMsgSchema>;

@@ -159,10 +159,25 @@ describe('§4 #5 — prompt timeout ⇒ auto-decline, table proceeds', () => {
           return { ok: true, events: [{
             seq: 42, id: 'evt-prompt', causeId: 'evt-0041', at: '2026-07-19T00:00:00.000Z',
             actor: { kind: 'engine' }, visibility: 'public',
-            body: { t: 'reaction_prompted', promptId: 'prompt-1', creatureId: 'pc-torvald', timeoutSec: 60,
-              context: { kind: 'opportunity_attack', moverId: 'npc-goblin', provokerId: 'pc-torvald',
-                pathStep: { from: { x: 5, y: 5 }, to: { x: 6, y: 5 } }, attackOptions: ['Longsword'] } },
-          } as PlayEvent] };
+            /* A REAL prompt context. This used to carry the discriminator at
+               the top level and an empty `context`, which is not a shape the
+               server can emit — the kind belongs to the context, and the
+               context is what the holder is being asked about. The timeout is
+               what this test is really about, but a stub that could never
+               occur is one the test cannot vouch for. */
+            body: {
+              t: 'reaction_prompted',
+              promptId: 'prompt-1',
+              creatureId: 'pc-torvald',
+              context: {
+                kind: 'opportunity_attack',
+                moverId: 'npc-goblin-1',
+                provokerId: 'pc-torvald',
+                pathStep: { from: { x: 5, y: 5 }, to: { x: 6, y: 5 } },
+                attackOptions: ['Longsword'],
+              },
+            },
+          } satisfies PlayEvent] };
         }
         return { ok: false, reason: 'no' };
       },

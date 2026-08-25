@@ -60,8 +60,11 @@
     "ability": "int",
     "saveDc": { "value": 13, "derivation": [{ "label": "Base", "value": 8 }, { "label": "Proficiency", "value": 2 }, { "label": "INT", "value": 3 }] },
     "attackBonus": { "value": 5, "derivation": [{ "label": "Proficiency", "value": 2 }, { "label": "INT", "value": 3 }] },
+    "slotKind": "slots",
     "slots": { "1": 4, "2": 2 },
-    "prepared": []
+    "preparedMax": 6,
+    "prepared": [],
+    "cantrips": []
   },
   "coins": { "cp": 0, "sp": 0, "ep": 0, "gp": 0, "pp": 0 }
 }

@@ -1,316 +1,181 @@
 /**
- * PresetsAboveFreeForm — the presets-above-free-form input. Playbook §3
- * primitive, reused by wizard steps, premise chips, scene creation, and
- * onboarding Floor 1. The shape teaches the beginner (tap a preset) without
- * caging the veteran (type your own) — presets are a starting point, never a
- * fence. Edit the text and the chip quietly lets go.
+ * PresetsAboveFreeForm — presets teach the beginner without caging the
+ * veteran (Build Playbook §3; Character Creation Wizard, Campaign Wrapper,
+ * Session Planner, and Onboarding Floor 1 all use it).
  *
- * Two selection shapes:
- *   - 'pick' (single): choosing a preset REPLACES the free-form text — the field
- *     always holds one value (a premise, a class fantasy). Editing after picking
- *     is fine and leaves the chips unselected (you've gone your own way).
- *   - 'tags' (multi): presets are toggles that live alongside free-form additions
- *     — the value is a list (scene tags, appearance traits). Free-form entries
- *     become tags too (Enter to add), and render as first-class chips.
+ * Tap a chip to learn what a good answer looks like, or ignore them entirely
+ * and type your own. Presets are a starting point, never a fence — the free
+ * text box is always right there, never hidden behind the chips.
  *
- * Design: the Questra V1 Prototype sheet, §Picker and Presets. Themed entirely
- * via --qa-* tokens. The chips are body-font sentence-case buttons (NOT the
- * @questra/ui Chip, which is a mono uppercase status pill for a different job),
- * and focus wears the one --qa-focus-ring.
+ * A discriminated union on `mode` gives two genuinely different behaviours
+ * from one component:
+ *
+ * - `'pick'` (default) — one value. Choosing a preset REPLACES the text with
+ *   its label; re-tapping the active chip clears the field. The active chip
+ *   is derived, never stored (`presets.find(p => p.label === value)`), so
+ *   editing the text after a pick naturally leaves every chip unselected —
+ *   no extra state needed to track "you went your own way".
+ * - `'tags'` — a `string[]`. Presets toggle; free-form entries become tags
+ *   too (Enter or blur to add, duplicates rejected). Custom tags render as
+ *   removable chips, visually distinct from the always-toggleable presets: a
+ *   preset you deselect is still on offer, but something you typed has
+ *   nowhere to go back to, so it gets a delete rather than a deselect.
+ *
+ * Controlled in both modes — `value`/`onChange` in, nothing owned here
+ * except the tags draft, which is not an answer until it is committed.
  */
-import { useId, useState, type CSSProperties, type ReactNode } from 'react';
-import { Label } from '@questra/ui';
+import { useId, useState, type KeyboardEvent, type ReactElement, type ReactNode } from 'react';
+import { DesignStyles, Eyebrow, Help, Tag } from '../design/index.js';
+import { prose } from '../design/index.js';
 
-export interface Preset {
-  id: string;
+export interface PresetOption {
   label: string;
 }
 
-interface Base {
+interface SharedProps {
   label: string;
-  presets: Preset[];
-  help?: ReactNode;
+  help?: string;
+  presets: PresetOption[];
   placeholder?: string;
 }
 
-export interface PickProps extends Base {
+export interface PickFieldProps extends SharedProps {
   mode?: 'pick';
-  /** The single free-form value. A picked preset's label becomes this value. */
   value: string;
-  onChange: (value: string) => void;
+  onChange: (next: string) => void;
 }
 
-export interface TagsProps extends Base {
+export interface TagsFieldProps extends SharedProps {
   mode: 'tags';
-  /** The list of chosen values (preset labels and/or free-form additions). */
   value: string[];
-  onChange: (values: string[]) => void;
+  onChange: (next: string[]) => void;
 }
 
-export type PresetsAboveFreeFormProps = PickProps | TagsProps;
+export type PresetsAboveFreeFormProps = PickFieldProps | TagsFieldProps;
 
-export function PresetsAboveFreeForm(props: PresetsAboveFreeFormProps) {
-  return props.mode === 'tags' ? <TagsField {...props} /> : <PickField {...props} />;
+export function PresetsAboveFreeForm(props: PresetsAboveFreeFormProps): ReactElement {
+  if (props.mode === 'tags') return <TagsField {...props} />;
+  return <PickField {...props} />;
 }
 
-// ---- single-pick ---------------------------------------------------------
+function PickField({ label, help, presets, value, onChange, placeholder = 'Or write your own…' }: PickFieldProps): ReactElement {
+  const inputId = useId();
+  const activeLabel = presets.find((p) => p.label === value)?.label;
 
-function PickField({ label, presets, value, onChange, help, placeholder }: PickProps) {
-  const id = useId();
-  // Derived, not stored: type your own and every chip quietly lets go.
-  const activeId = presets.find((p) => p.label === value)?.id ?? null;
+  function tap(preset: PresetOption): void {
+    onChange(preset.label === value ? '' : preset.label);
+  }
 
   return (
-    <Field label={label} help={help} htmlFor={id}>
+    <Labelled id={inputId} label={label} help={help}>
       <ChipRow>
-        {presets.map((p) => (
-          <PresetChip
-            key={p.id}
-            on={p.id === activeId}
-            onClick={() => onChange(p.id === activeId ? '' : p.label)}
-          >
-            {p.label}
-          </PresetChip>
+        {presets.map((preset) => (
+          <Tag key={preset.label} selected={preset.label === activeLabel} onClick={() => tap(preset)}>
+            {preset.label}
+          </Tag>
         ))}
       </ChipRow>
-      <TextInput
-        id={id}
-        value={value}
-        placeholder={placeholder ?? 'Or write your own…'}
-        onChange={onChange}
-      />
-    </Field>
+      <span className="qa2-open">
+        <input
+          id={inputId}
+          className="qa2-input"
+          type="text"
+          value={value}
+          placeholder={placeholder}
+          onChange={(e) => onChange(e.target.value)}
+          style={prose}
+        />
+      </span>
+    </Labelled>
   );
 }
 
-// ---- multi-tag -----------------------------------------------------------
-
-function TagsField({ label, presets, value, onChange, help, placeholder }: TagsProps) {
-  const id = useId();
+function TagsField({ label, help, presets, value, onChange, placeholder = 'Add your own — press Enter' }: TagsFieldProps): ReactElement {
+  const inputId = useId();
   const [draft, setDraft] = useState('');
-  const chosen = new Set(value);
 
-  function toggle(labelText: string) {
-    if (chosen.has(labelText)) onChange(value.filter((v) => v !== labelText));
-    else onChange([...value, labelText]);
+  function togglePreset(preset: PresetOption): void {
+    onChange(value.includes(preset.label) ? value.filter((v) => v !== preset.label) : [...value, preset.label]);
   }
 
-  function addDraft() {
-    const t = draft.trim();
-    if (t && !chosen.has(t)) onChange([...value, t]);
+  function removeTag(tag: string): void {
+    onChange(value.filter((v) => v !== tag));
+  }
+
+  function commitDraft(): void {
+    const next = draft.trim();
+    if (next !== '' && !value.includes(next)) onChange([...value, next]);
     setDraft('');
   }
 
-  // Free-form additions that aren't presets, so they can be shown as removable tags.
-  const presetLabels = new Set(presets.map((p) => p.label));
-  const customTags = value.filter((v) => !presetLabels.has(v));
+  function onKeyDown(e: KeyboardEvent<HTMLInputElement>): void {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commitDraft();
+    }
+  }
+
+  const customTags = value.filter((v) => !presets.some((p) => p.label === v));
 
   return (
-    <Field label={label} help={help} htmlFor={id}>
+    <Labelled id={inputId} label={label} help={help}>
       <ChipRow>
-        {presets.map((p) => (
-          <PresetChip key={p.id} on={chosen.has(p.label)} onClick={() => toggle(p.label)}>
-            {p.label}
-          </PresetChip>
+        {presets.map((preset) => (
+          <Tag key={preset.label} selected={value.includes(preset.label)} onClick={() => togglePreset(preset)}>
+            {preset.label}
+          </Tag>
         ))}
-        {customTags.map((t) => (
-          <PresetChip key={`custom-${t}`} on custom onRemove={() => toggle(t)}>
-            {t}
-          </PresetChip>
+        {customTags.map((tag) => (
+          <Tag key={tag} selected onRemove={() => removeTag(tag)}>
+            {tag}
+          </Tag>
         ))}
       </ChipRow>
-      <TextInput
-        id={id}
-        value={draft}
-        placeholder={placeholder ?? 'Add your own — press Enter'}
-        onChange={setDraft}
-        onEnter={addDraft}
-        onBlur={addDraft}
-      />
-    </Field>
+      <span className="qa2-open">
+        <input
+          id={inputId}
+          className="qa2-input"
+          type="text"
+          value={draft}
+          placeholder={placeholder}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={onKeyDown}
+          onBlur={commitDraft}
+          style={prose}
+        />
+      </span>
+    </Labelled>
   );
 }
 
-// ---- shared bits ---------------------------------------------------------
-
-function Field({
+/**
+ * Label, then the offers, then the box you can ignore them in. The label sits
+ * ABOVE the chips rather than boxed with the input, because it names the whole
+ * question and the chips are part of the answer to it.
+ */
+function Labelled({
+  id,
   label,
   help,
-  htmlFor,
   children,
 }: {
+  id: string;
   label: string;
-  help?: ReactNode;
-  htmlFor: string;
+  help?: string | undefined;
   children: ReactNode;
-}) {
+}): ReactElement {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div>
-        <label htmlFor={htmlFor}>
-          <Label tone="dim">{label}</Label>
-        </label>
-        {help && (
-          <p
-            style={{
-              margin: '4px 0 0',
-              fontSize: 11.5,
-              fontStyle: 'italic',
-              color: 'var(--qa-vellum-dim)',
-            }}
-          >
-            {help}
-          </p>
-        )}
-      </div>
+    <div className="qa2-field">
+      <DesignStyles />
+      <Eyebrow>
+        <label htmlFor={id}>{label}</label>
+      </Eyebrow>
       {children}
+      {help !== undefined && <Help>{help}</Help>}
     </div>
   );
 }
 
-function ChipRow({ children }: { children: ReactNode }) {
-  return <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{children}</div>;
-}
-
-/**
- * A preset chip. Body font, sentence case — deliberately NOT the @questra/ui
- * Chip, which is a mono uppercase status pill (Bloodied, Concentrating) doing a
- * different job. A custom (free-form) tag is first-class: same chip, plus an
- * ember wash and a remove control.
- */
-function PresetChip({
-  children,
-  on,
-  custom = false,
-  onClick,
-  onRemove,
-}: {
-  children: ReactNode;
-  on: boolean;
-  custom?: boolean;
-  onClick?: () => void;
-  onRemove?: () => void;
-}) {
-  const [focused, setFocused] = useState(false);
-
-  const shell: CSSProperties = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 6,
-    fontFamily: 'var(--qa-font-body)',
-    fontSize: 12,
-    padding: '5px 12px',
-    borderRadius: 'var(--qa-radius-sm)',
-    border: on
-      ? '1px solid color-mix(in srgb, var(--qa-ember) 55%, transparent)'
-      : '1px solid var(--qa-hairline)',
-    background: custom
-      ? 'color-mix(in srgb, var(--qa-ember) 10%, transparent)'
-      : on
-        ? 'var(--qa-vellum-ghost)'
-        : 'transparent',
-    color: on ? 'var(--qa-vellum-bright)' : 'var(--qa-vellum-dim)',
-    cursor: onClick ? 'pointer' : 'default',
-    ...(focused ? { boxShadow: 'var(--qa-focus-ring)' } : {}),
-    transition:
-      'background var(--qa-dur-fast) var(--qa-ease), border-color var(--qa-dur-fast) var(--qa-ease), color var(--qa-dur-fast) var(--qa-ease)',
-  };
-
-  // A custom tag is a span carrying its own remove button, so the two controls
-  // stay separately reachable rather than nesting a button inside a button.
-  if (custom) {
-    return (
-      <span style={shell}>
-        {children}
-        <button
-          type="button"
-          title="Remove"
-          aria-label={`Remove ${String(children)}`}
-          onClick={onRemove}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          style={{
-            border: 'none',
-            background: 'none',
-            color: 'var(--qa-vellum-dim)',
-            cursor: 'pointer',
-            padding: 0,
-            fontSize: 11,
-            lineHeight: 1,
-          }}
-        >
-          ✕
-        </button>
-      </span>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      aria-pressed={on}
-      onClick={onClick}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
-      style={shell}
-    >
-      {children}
-    </button>
-  );
-}
-
-function TextInput({
-  id,
-  value,
-  placeholder,
-  onChange,
-  onEnter,
-  onBlur,
-}: {
-  id: string;
-  value: string;
-  placeholder: string;
-  onChange: (text: string) => void;
-  onEnter?: () => void;
-  onBlur?: () => void;
-}) {
-  const [focused, setFocused] = useState(false);
-  return (
-    <input
-      id={id}
-      type="text"
-      value={value}
-      placeholder={placeholder}
-      onChange={(e) => onChange(e.target.value)}
-      onKeyDown={
-        onEnter
-          ? (e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                onEnter();
-              }
-            }
-          : undefined
-      }
-      onFocus={() => setFocused(true)}
-      onBlur={() => {
-        setFocused(false);
-        onBlur?.();
-      }}
-      style={{
-        width: '100%',
-        boxSizing: 'border-box',
-        fontFamily: 'var(--qa-font-body)',
-        fontSize: 14,
-        color: 'var(--qa-vellum)',
-        background: 'var(--qa-vellum-ghost)',
-        border: '1px solid var(--qa-hairline)',
-        borderRadius: 'var(--qa-radius-sm)',
-        padding: '9px 11px',
-        outline: 'none',
-        ...(focused ? { boxShadow: 'var(--qa-focus-ring)' } : {}),
-        transition: 'box-shadow var(--qa-dur-fast) var(--qa-ease)',
-      }}
-    />
-  );
+function ChipRow({ children }: { children: ReactNode }): ReactElement {
+  return <div className="qa2-offers">{children}</div>;
 }

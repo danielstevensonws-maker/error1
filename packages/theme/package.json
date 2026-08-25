@@ -1,22 +1,20 @@
 {
   "name": "@questra/theme",
   "version": "0.1.0",
-  "description": "The repo theme: Questra design tokens (color/type/spacing/effects) and base ground/type roles, transcribed from Claude Design per ADR-0014. The single visual dependency every Questra UI package composes from.",
+  "private": true,
+  "description": "The design token set (ADR-0014). Transcribed verbatim from Claude Design; every primitive reads --qa-* from here and hardcodes nothing.",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
     "./styles.css": "./src/styles.css",
-    "./index.css": "./src/index.css",
-    "./base.css": "./src/base.css",
-    "./tokens/*": "./src/tokens/*"
+    "./tokens.css": "./src/tokens.css"
   },
-  "files": ["dist", "src"],
+  "files": ["src"],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "echo \"@questra/theme is CSS-only — nothing to compile\"",
     "test": "vitest run",
-    "check": "tsc -p tsconfig.json --noEmit && vitest run"
+    "check": "npm run build && vitest run"
   },
-  "devDependencies": { "typescript": "^7.0.2", "vitest": "^4.0.0", "@types/node": "^24.0.0" }
+  "devDependencies": {
+    "vitest": "^4.0.0"
+  }
 }

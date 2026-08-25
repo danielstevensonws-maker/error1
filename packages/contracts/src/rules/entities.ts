@@ -126,7 +126,16 @@ export const ClassMetaSchema = z.object({
   hitDie: z.enum(['d6', 'd8', 'd10', 'd12']),
   primaryAbility: z.union([AbilitySchema, z.enum(['str_or_dex'])]),
   saves: z.tuple([AbilitySchema, AbilitySchema]),
-  casterType: z.enum(['none', 'third', 'half', 'full']),
+  // How the class gets spell slots. 'pact' is the Warlock's Pact Magic: fewer
+  // slots, all at one level, back on a Short Rest — not a weaker 'full'.
+  casterType: z.enum(['none', 'third', 'half', 'full', 'pact']),
+  /**
+   * The ability the class casts with. Distinct from `primaryAbility` and NOT
+   * derivable from it: a Paladin's primary ability is Strength but it casts on
+   * Charisma, a Ranger's is Dexterity but it casts on Wisdom. Absent on
+   * non-casters (and on homebrew that hasn't declared one).
+   */
+  spellcastingAbility: AbilitySchema.optional(),
   subclassLevel: z.number().int(),
   asiLevels: z.array(z.number().int()),
   levels: z.record(z.string().regex(/^([1-9]|1[0-9]|20)$/), LevelRowSchema),

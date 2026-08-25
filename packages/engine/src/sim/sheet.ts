@@ -18,35 +18,39 @@ import {
   type ComputedSheet,
   type AttackCard,
   type FeatureCard,
+  type SpellCard,
 } from '@questra/contracts';
 import { abilityMod } from './state.js';
+import {
+  slotsFor,
+  highestSlotLevel,
+  unsupportedCasterType,
+  PREPARED_SPELLS,
+  type CasterType,
+} from './spell-slots.js';
 
 /** Standard proficiency bonus by character level (SRD advancement table). */
 function profBonusForLevel(level: number): number {
   return 2 + Math.floor((level - 1) / 4);
 }
 
-/** Spell-slot progression by caster type + level. Full caster (Wizard/etc.) table, SRD. */
-const FULL_CASTER_SLOTS: Record<number, Record<string, number>> = {
-  1: { '1': 2 }, 2: { '1': 3 }, 3: { '1': 4, '2': 2 }, 4: { '1': 4, '2': 3 },
-  5: { '1': 4, '2': 3, '3': 2 },
-  // (higher levels omitted for the slice; extend when a brief needs them)
-};
-
 export interface SheetRulesData {
   classesById: Map<string, RulesEntity>;
   itemsById: Map<string, RulesEntity>;
+  spellsById: Map<string, RulesEntity>;
   speciesSpeedFt: number;
 }
 
 export function buildSheetRulesData(entities: readonly RulesEntity[], speciesSpeedFt = 30): SheetRulesData {
   const classesById = new Map<string, RulesEntity>();
   const itemsById = new Map<string, RulesEntity>();
+  const spellsById = new Map<string, RulesEntity>();
   for (const e of entities) {
     if (e.entityType === 'class') classesById.set(e.id, e);
     if (e.entityType === 'item') itemsById.set(e.id, e);
+    if (e.entityType === 'spell') spellsById.set(e.id, e);
   }
-  return { classesById, itemsById, speciesSpeedFt };
+  return { classesById, itemsById, spellsById, speciesSpeedFt };
 }
 
 /** A choice-validation failure, in plain language (Brief 03 §4 #3). */
@@ -75,6 +79,18 @@ function validateChoices(choices: CharacterChoices): void {
 }
 
 /** Compute the full sheet. Throws IllegalChoiceError (plain-language) on illegal input. */
+/**
+ * Which ability each skill leans on (SRD). Exported because the SERVER needs
+ * the same answer when it rolls a check for somebody: a second copy of this
+ * table is a second place for Perception to become Intelligence.
+ */
+export const SKILL_ABILITY: Partial<Record<Skill, Ability>> = {
+  athletics: 'str', acrobatics: 'dex', sleight_of_hand: 'dex', stealth: 'dex',
+  arcana: 'int', history: 'int', investigation: 'int', nature: 'int', religion: 'int',
+  animal_handling: 'wis', insight: 'wis', medicine: 'wis', perception: 'wis', survival: 'wis',
+  deception: 'cha', intimidation: 'cha', performance: 'cha', persuasion: 'cha',
+};
+
 export function computeSheet(choices: CharacterChoices, rules: SheetRulesData): ComputedSheet {
   validateChoices(choices);
 
@@ -156,12 +172,7 @@ export function computeSheet(choices: CharacterChoices, rules: SheetRulesData): 
 
   // ---- skills (chosen proficiencies) ----
   const skills = {} as ComputedSheet['skills'];
-  const skillAbility: Partial<Record<Skill, Ability>> = {
-    athletics: 'str', acrobatics: 'dex', sleight_of_hand: 'dex', stealth: 'dex',
-    arcana: 'int', history: 'int', investigation: 'int', nature: 'int', religion: 'int',
-    animal_handling: 'wis', insight: 'wis', medicine: 'wis', perception: 'wis', survival: 'wis',
-    deception: 'cha', intimidation: 'cha', performance: 'cha', persuasion: 'cha',
-  };
+  const skillAbility = SKILL_ABILITY;
   for (const sk of choices.skillChoices) {
     const ab = skillAbility[sk] ?? 'int';
     const m = mod(ab);
@@ -220,16 +231,57 @@ export function computeSheet(choices: CharacterChoices, rules: SheetRulesData): 
   }
 
   // ---- spellcasting ----
+  // Every caster type that has a verified SRD progression gets its slots here,
+  // not just full casters: a Paladin and a Ranger cast from level 1 in SRD
+  // 5.2.1, and the Warlock's Pact Magic is its own kind of slot rather than a
+  // thinner full-caster ladder.
   let spellcasting: ComputedSheet['spellcasting'];
-  if (meta.casterType === 'full') {
-    const castAbility: Ability = meta.primaryAbility === 'str_or_dex' ? 'int' : (meta.primaryAbility as Ability);
+  const casterType = meta.casterType as CasterType;
+  if (casterType !== 'none') {
+    const unsupported = unsupportedCasterType(casterType);
+    if (unsupported) throw new IllegalChoiceError(unsupported);
+
+    // The casting ability is declared by the class, never inferred from its
+    // primary ability — a Paladin is a Strength class that casts on Charisma.
+    const castAbility: Ability = meta.spellcastingAbility
+      ?? (meta.primaryAbility === 'str_or_dex' ? 'int' : (meta.primaryAbility as Ability));
     const am = mod(castAbility);
+    const slots = slotsFor(casterType, choices.level) ?? {};
+    const preparedMax = PREPARED_SPELLS[choices.classId]?.[choices.level] ?? 0;
+    const saveDc = d(8 + prof + am, [{ label: 'Base', value: 8 }, { label: 'Proficiency', value: prof }, { label: castAbility.toUpperCase(), value: am }]);
+    const attackBonus = d(prof + am, [{ label: 'Proficiency', value: prof }, { label: castAbility.toUpperCase(), value: am }]);
+
+    const resolve = (id: string) => resolveSpellCard(id, rules, klass.name, saveDc.value);
+    const cantrips = (choices.cantripChoices ?? []).map(resolve);
+    const prepared = (choices.preparedSpellIds ?? []).map(resolve);
+
+    for (const c of cantrips) {
+      if (c.level !== 0) throw new IllegalChoiceError(`${c.name} is a level ${c.level} spell, not a cantrip.`);
+    }
+    const ceiling = highestSlotLevel(slots);
+    for (const s of prepared) {
+      if (s.level === 0) throw new IllegalChoiceError(`${s.name} is a cantrip — it belongs with your cantrips, not your prepared spells.`);
+      if (s.level > ceiling) {
+        throw new IllegalChoiceError(
+          ceiling === 0
+            ? `${s.name} is a level ${s.level} spell, and you have no spell slots yet.`
+            : `${s.name} is a level ${s.level} spell, but the highest you can cast is level ${ceiling}.`,
+        );
+      }
+    }
+    if (prepared.length > preparedMax) {
+      throw new IllegalChoiceError(`That's ${prepared.length} prepared spells, but a level ${choices.level} ${klass.name} can prepare ${preparedMax}.`);
+    }
+
     spellcasting = {
       ability: castAbility,
-      saveDc: d(8 + prof + am, [{ label: 'Base', value: 8 }, { label: 'Proficiency', value: prof }, { label: castAbility.toUpperCase(), value: am }]),
-      attackBonus: d(prof + am, [{ label: 'Proficiency', value: prof }, { label: castAbility.toUpperCase(), value: am }]),
-      slots: FULL_CASTER_SLOTS[choices.level] ?? {},
-      prepared: [],
+      saveDc,
+      attackBonus,
+      slotKind: casterType === 'pact' ? 'pact' : 'slots',
+      slots,
+      preparedMax,
+      prepared,
+      cantrips,
     };
   }
 
@@ -247,6 +299,63 @@ export function computeSheet(choices: CharacterChoices, rules: SheetRulesData): 
 }
 
 // ---- helpers -------------------------------------------------------------
+
+/**
+ * Turn a chosen spell id into a card, reading its mechanics off the entity's own
+ * `effects[]`. Nothing is inferred from the spell's prose: a spell whose effects
+ * haven't had the rules-lawyer pass yet simply comes back without `save`,
+ * `attack` or `damage`, which the card documents as "not known from the data".
+ */
+function resolveSpellCard(
+  id: string,
+  rules: SheetRulesData,
+  className: string,
+  saveDcValue: number,
+): SpellCard {
+  const entity = rules.spellsById.get(id);
+  if (!entity || entity.entityType !== 'spell') {
+    throw new IllegalChoiceError(`Unknown spell "${id}".`);
+  }
+  const meta = entity.meta;
+  const classSlug = className.toLowerCase();
+  if (meta.classLists.length > 0 && !meta.classLists.includes(classSlug)) {
+    throw new IllegalChoiceError(`${entity.name} isn't on the ${className} spell list.`);
+  }
+
+  const card: SpellCard = {
+    id: entity.id,
+    name: entity.name,
+    level: meta.level,
+    school: meta.school,
+    castingTime: meta.castingTime,
+    rangeFt: meta.rangeFt,
+    concentration: meta.concentration,
+    ritual: meta.ritual,
+    plain: entity.plain,
+  };
+
+  for (const effect of entity.effects) {
+    if (effect.hook !== 'trigger') continue;
+    const action = effect.do;
+    if (action.action === 'area_save' || action.action === 'prompt_save') {
+      const dc = action.save.dc === 'spell_save_dc' || typeof action.save.dc !== 'number'
+        ? saveDcValue
+        : action.save.dc;
+      card.save = { ability: action.save.ability, dc };
+      if (action.action === 'area_save' && action.onFail.damage) {
+        card.damage = { dice: action.onFail.damage.dice, type: action.onFail.damage.type };
+      }
+      break;
+    }
+  }
+  // `card.attack` is deliberately never set here. The effect vocabulary has no
+  // spell-attack-roll action (area_save, prompt_save, heal, take_action), so
+  // there is nothing in the data that says "this spell is an attack roll".
+  // Filling it in from the caster's attack bonus would put a number on cards
+  // like Cure Wounds that never roll to hit. It stays absent until the effect
+  // vocabulary can express it.
+  return card;
+}
 
 /** Read an armor's AC from its item row: base value + whether/how DEX applies. */
 interface ArmorAc { base: number; dexUp: boolean; dexCap?: number }

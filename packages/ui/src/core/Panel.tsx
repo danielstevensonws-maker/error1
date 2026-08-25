@@ -1,91 +1,43 @@
-import type { CSSProperties, ReactNode, ReactElement } from 'react';
+/**
+ * Panel — the glass surface every floating UI sits on.
+ *
+ * The design's panels are translucent glass over a dark ground, not opaque
+ * cards. All four glass values come from the active [data-qa-theme]; nothing
+ * here is hardcoded, so slate/ivory re-theme this with zero edits.
+ */
+import type { CSSProperties, ReactNode } from 'react';
+
+export type PanelTone = 'glass' | 'solid';
 
 export interface PanelProps {
-  /** Tiny mono uppercase header label, e.g. "WHAT ONLY YOU KNOW". */
-  label?: string;
-  /** Show a — / + collapse control. Every HUD panel should be collapsible. */
-  collapsible?: boolean;
-  collapsed?: boolean;
-  onToggle?: () => void;
-  /** Raised = menus/modals: heavier fill + stronger blur. */
-  raised?: boolean;
-  children?: ReactNode;
+  children: ReactNode;
+  /** `glass` floats over the map; `solid` is for surfaces that must stay legible over anything. */
+  tone?: PanelTone;
+  /** Large radius for full surfaces; the default suits inline blocks. */
+  large?: boolean;
+  className?: string;
   style?: CSSProperties;
+  /** Names the region when the panel IS the landmark (e.g. a player's whole HUD). */
+  'aria-label'?: string;
 }
 
-/**
- * The floating translucent glass shell. Everything on a HUD lives inside one.
- * Panels sit in fixed positions and never move — muscle memory is a feature.
- * Never solid — the battlemap must read through it.
- *
- * Ported from components/core/Panel.jsx; reads only --qa-* tokens.
- */
-export function Panel({
-  label,
-  collapsible = false,
-  collapsed = false,
-  onToggle,
-  raised = false,
-  children,
-  style = {},
-}: PanelProps): ReactElement {
-  const blur = raised ? 'var(--qa-blur-raised)' : 'var(--qa-blur)';
-  const shell: CSSProperties = {
-    borderRadius: 'var(--qa-radius-md)',
-    background: raised ? 'var(--qa-glass-raised)' : 'var(--qa-glass)',
-    border: '1px solid var(--qa-glass-border)',
-    backdropFilter: `blur(${blur})`,
-    WebkitBackdropFilter: `blur(${blur})`,
-    color: 'var(--qa-glass-text)',
-    display: 'flex',
-    flexDirection: 'column',
-    ...style,
+export function Panel({ children, tone = 'glass', large = false, className, style, 'aria-label': ariaLabel }: PanelProps) {
+  const base: CSSProperties = {
+    background: tone === 'solid' ? 'var(--qa-glass-solid)' : 'var(--qa-glass)',
+    border: 'var(--qa-hairline) solid var(--qa-glass-border)',
+    borderRadius: large ? 'var(--qa-radius-lg)' : 'var(--qa-radius)',
+    color: 'var(--qa-ink)',
+    ...(tone === 'glass'
+      ? {
+          backdropFilter: 'blur(var(--qa-glass-blur))',
+          WebkitBackdropFilter: 'blur(var(--qa-glass-blur))',
+        }
+      : {}),
   };
 
   return (
-    <div style={shell}>
-      {label !== undefined && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '9px 13px',
-            borderBottom: collapsed ? 'none' : '1px solid var(--qa-glass-border)',
-          }}
-        >
-          <span
-            style={{
-              fontFamily: 'var(--qa-font-mono)',
-              fontSize: 10,
-              letterSpacing: 'var(--qa-track-label)',
-              color: 'var(--qa-glass-dim)',
-            }}
-          >
-            {label}
-          </span>
-          {collapsible && (
-            <button
-              onClick={onToggle}
-              title={collapsed ? 'Expand' : 'Collapse'}
-              style={{
-                border: 'none',
-                background: 'transparent',
-                cursor: 'pointer',
-                color: 'var(--qa-glass-dim)',
-                fontSize: 13,
-                lineHeight: 1,
-                padding: 0,
-              }}
-            >
-              {collapsed ? '+' : '—'}
-            </button>
-          )}
-        </div>
-      )}
-      {!collapsed && (
-        <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>{children}</div>
-      )}
+    <div className={className} style={{ ...base, ...style }} aria-label={ariaLabel}>
+      {children}
     </div>
   );
 }

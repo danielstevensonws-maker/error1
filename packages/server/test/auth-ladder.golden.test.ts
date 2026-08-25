@@ -86,10 +86,10 @@ describe('auth ladder (Brief 14 §1)', () => {
     expect(s2.access).not.toBe(s1.access);
     await expect(svc.refresh(s1.refresh)).rejects.toMatchObject({ status: 401 }); // old one revoked
 
-    // 6. Alice owns a campaign (stand-in for §2 CRUD) → deletion blocked with a plain reason
-    repo.addCampaign({ id: 'camp_1', name: 'The Sunless Keep', ownerAccountId: 'acc_alice' });
-    repo.addSession('sess_1', 'camp_1');
-    repo.addMembership({ campaignId: 'camp_1', accountId: 'acc_alice', role: 'dm', createdAt: '2026-07-20T00:00:00.000Z' });
+    // 6. Alice owns a campaign (Brief 14 §2) → deletion blocked with a plain reason
+    await repo.createCampaign({ id: 'camp_1', name: 'The Sunless Keep', ownerAccountId: 'acc_alice', createdAt: '2026-07-20T00:00:00.000Z' });
+    await repo.createPlaySession('sess_1', 'camp_1', '2026-07-20T00:00:00.000Z');
+    await repo.addMembership({ campaignId: 'camp_1', accountId: 'acc_alice', role: 'dm', createdAt: '2026-07-20T00:00:00.000Z' });
     await expect(svc.deleteAccount('acc_alice')).rejects.toMatchObject({
       status: 409, code: 'owns_campaign',
     });
@@ -118,6 +118,17 @@ describe('auth ladder (Brief 14 §1)', () => {
     const r = await svc.requestReset('nobody@example.com');
     expect(r).toEqual({}); // resolves 200-equivalent, no token minted, no throw
     expect(mailer.sent.length).toBe(0);
+  });
+
+  it('getSelf (GET /auth/me\'s read) returns the client-safe self-view, never a deleted one', async () => {
+    const { self } = await svc.signup('dora@example.com', 'dora password', 'Dora');
+    const fetched = await svc.getSelf(self.id);
+    expect(() => SelfAccountSchema.parse(fetched)).not.toThrow();
+    expect(fetched).toEqual(self); // signup's own return is already the self-view — must agree
+    expect(fetched).not.toHaveProperty('passwordHash');
+
+    await svc.deleteAccount(self.id);
+    await expect(svc.getSelf(self.id)).rejects.toMatchObject({ status: 401, code: 'auth' });
   });
 
   it('an expired access token no longer verifies', async () => {

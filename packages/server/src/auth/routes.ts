@@ -74,6 +74,12 @@ export function registerAuthRoutes(
     return { access, exp };
   }));
 
+  app.get('/auth/me', async (req, reply) => handle(reply, async () => {
+    const accountId = await currentAccountId(req.headers.authorization);
+    if (!accountId) { reply.code(401); return { error: 'auth', reason: 'Please sign in.' }; }
+    return service.getSelf(accountId);
+  }));
+
   app.post('/auth/refresh', async (req, reply) => handle(reply, async () => {
     const raw = readRefreshCookie(req.headers.cookie);
     if (!raw) { reply.code(401); return { error: 'no_refresh', reason: 'Please sign in again.' }; }

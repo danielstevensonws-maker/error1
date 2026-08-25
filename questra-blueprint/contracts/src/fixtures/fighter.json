@@ -1,0 +1,70 @@
+{
+  "class": {
+    "id": "class.fighter",
+    "entityType": "class",
+    "name": "Fighter",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "verified",
+    "plain": "The master of weapons and armor. Simple to play, hard to kill.",
+    "srd_text": "<verbatim SRD Fighter chapter — populated at ingestion>",
+    "effects": [],
+    "resolution": "routine",
+    "meta": {
+      "complexity": "low",
+      "hitDie": "d10",
+      "primaryAbility": "str_or_dex",
+      "saves": ["str", "con"],
+      "casterType": "none",
+      "subclassLevel": 3,
+      "asiLevels": [4, 6, 8, 12, 14, 16],
+      "levels": {
+        "1": { "profBonus": 2, "features": ["feature.fighter.fighting-style", "feature.fighter.second-wind", "feature.fighter.weapon-mastery"], "setResources": { "second_wind.max": 2, "weapon_mastery.count": 3 } },
+        "2": { "profBonus": 2, "features": ["feature.fighter.action-surge", "feature.fighter.tactical-mind"], "setResources": { "action_surge.max": 1 } },
+        "3": { "profBonus": 2, "features": ["choice.fighter.subclass"] },
+        "4": { "profBonus": 2, "features": ["choice.asi-or-feat"], "setResources": { "second_wind.max": 3, "weapon_mastery.count": 4 } },
+        "5": { "profBonus": 3, "features": ["feature.fighter.extra-attack", "feature.fighter.tactical-shift"] }
+      }
+    }
+  },
+  "secondWind": {
+    "id": "feature.fighter.second-wind",
+    "entityType": "feat",
+    "name": "Second Wind",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "verified",
+    "plain": "Once in a while, catch your breath as a bonus action and heal 1d10 plus your Fighter level.",
+    "srd_text": "You have a limited well of physical and mental stamina that you can draw on. As a Bonus Action, you can use it to regain Hit Points equal to 1d10 plus your Fighter level. You can use this feature twice. You regain one expended use when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest.",
+    "effects": [
+      {
+        "hook": "resource",
+        "pool": "feature.second_wind",
+        "op": "grant",
+        "amount": 2,
+        "recharge": "long_rest",
+        "partialRecharge": { "on": "short_rest", "amount": 1 }
+      },
+      {
+        "hook": "trigger",
+        "on": { "event": "activate", "cost": "bonus_action", "spends": "feature.second_wind" },
+        "do": { "action": "heal", "target": "self", "amount": "1d10 + level" }
+      }
+    ],
+    "resolution": "routine",
+    "meta": {}
+  },
+  "extraAttack": {
+    "id": "feature.fighter.extra-attack",
+    "entityType": "feat",
+    "name": "Extra Attack",
+    "source": "srd-5.2.1",
+    "version": "2026.07.0",
+    "qa": "verified",
+    "plain": "Attack twice, not once, whenever you take the Attack action.",
+    "srd_text": "You can attack twice instead of once whenever you take the Attack action on your turn.",
+    "effects": [],
+    "resolution": "engine_native",
+    "meta": { "engineNativeRule": "attack_count_2" }
+  }
+}

@@ -11,6 +11,7 @@
  * and its cascade are exactly the events the undo marker removes.
  */
 import type { PlayEvent, EventBody } from '@questra/contracts';
+import { deathSave } from './cascade.js';
 import { cloneState, type Combatant, type ProjectionState } from './state.js';
 
 /** Build the initial state from a set of combatants (pre-combat setup). */
@@ -49,7 +50,17 @@ function apply(state: ProjectionState, event: PlayEvent): void {
     }
     case 'healing_applied': {
       const t = c(b.creatureId);
-      if (t) t.hp = b.resultingHp;
+      if (!t) break;
+      t.hp = b.resultingHp;
+      /* SRD: "The number of both is reset to zero when you regain any Hit
+         Points." Any healing at all wipes the ladder — one hit point off a
+         natural 20 counts exactly as much as a full heal. */
+      if (b.resultingHp > 0) {
+        t.deathSuccesses = 0;
+        t.deathFailures = 0;
+        /* And you are no longer unconscious from dropping. */
+        t.conditions = t.conditions.filter((x) => x.conditionId !== 'condition.unconscious');
+      }
       break;
     }
     case 'condition_applied': {
@@ -81,9 +92,100 @@ function apply(state: ProjectionState, event: PlayEvent): void {
       }
       break;
     }
+    case 'initiative_rolled': {
+      /* The order IS the fight. Without it folded, a reconnecting client knows
+         whose turn it is but not who is next, and the round spine cannot be
+         drawn from a snapshot alone. The event carries totals; the projection
+         keeps only the resulting sequence, because the totals are a roll
+         result the log already holds. */
+      state.order = [...b.order]
+        .sort((x, y) => y.total - x.total)
+        .map((e) => e.creatureId);
+      /**
+       * AN EMPTY ORDER ENDS THE FIGHT, and that has to release the turn too.
+       *
+       * Clearing the order while leaving activeCreatureId pointing at whoever
+       * was last up left the table permanently mid-combat: every screen asks
+       * "is anybody's turn happening?" to decide whether we are fighting, so
+       * the DM's "Roll for initiative" never came back after the first fight
+       * (owner, 2026-08-25 — "it only appeared for the first time").
+       */
+      if (state.order.length === 0) delete state.activeCreatureId;
+      break;
+    }
+    /**
+     * The death-save ladder, kept where every other derived number is kept.
+     *
+     * The SRD: "The number of both is reset to zero when you regain any Hit
+     * Points or become Stable." Healing and stabilising are handled in their
+     * own cases; this one only counts.
+     */
+    case 'roll_made': {
+      if (b.kind !== 'death_save') break;
+      const dying = b.sources?.[0] === undefined ? undefined : state.combatants[b.sources[0]];
+      if (!dying) break;
+      const result = deathSave(b.d20, dying.deathSuccesses ?? 0, dying.deathFailures ?? 0);
+      dying.deathSuccesses = result.successes;
+      dying.deathFailures = result.failures;
+      break;
+    }
+
+    case 'creature_stabilized': {
+      const t = state.combatants[b.creatureId];
+      if (!t) break;
+      /* Stable is not dying: the ladder is cleared and the SRD's unconscious
+         condition stays until they are healed or come round. */
+      t.deathSuccesses = 0;
+      t.deathFailures = 0;
+      break;
+    }
+
+    case 'creature_died': {
+      const t = state.combatants[b.creatureId];
+      if (!t) break;
+      t.hp = 0;
+      break;
+    }
+
     case 'turn_advanced': {
       state.round = b.round;
       state.activeCreatureId = b.activeCreatureId;
+      break;
+    }
+
+    /**
+     * A creature the DM put on the board. Folded rather than seated at session
+     * start, because monsters arrive mid-session — that is what an encounter
+     * IS — and a base that could only be set once would never see them.
+     */
+    case 'creature_added': {
+      state.combatants[b.creatureId] = {
+        id: b.creatureId,
+        name: b.name,
+        /* A monster's own scores are the compendium's; these are the SRD's
+           "average" defaults, used only when the DM invents something. The
+           add_creature intent supplies real ones when it has them. */
+        abilities: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
+        profBonus: 2,
+        maxHp: b.maxHp,
+        hp: b.maxHp,
+        tempHp: 0,
+        ac: b.ac,
+        conditions: [],
+        /* Not a player character: this is what makes the 0-HP branch kill it
+           outright rather than knocking it unconscious, and what makes a
+           player's screen show it as a word rather than a number. */
+        isPlayer: false,
+      };
+      break;
+    }
+
+    case 'creature_removed': {
+      delete state.combatants[b.creatureId];
+      /* Also out of the turn order, or the fight hands a turn to somebody who
+         is no longer on the board. */
+      if (state.order) state.order = state.order.filter((id) => id !== b.creatureId);
+      if (state.activeCreatureId === b.creatureId) delete state.activeCreatureId;
       break;
     }
     default:

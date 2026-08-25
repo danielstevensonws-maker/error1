@@ -21,6 +21,7 @@ import {
   type PlayEvent,
   type Viewer,
   type ViewerRole,
+  type EffectId,
 } from '@questra/contracts';
 import { fold, initialState, type Combatant, type ProjectionState } from '@questra/engine';
 import type { Connection } from './transport.js';
@@ -42,18 +43,37 @@ export interface ResolvedToken {
 export type IntentResolver = (
   envelope: { idempotencyKey: string; intent: unknown },
   state: ProjectionState,
+  /**
+   * WHO SENT IT. The resolver needs this to refuse a DM control from a player:
+   * "start the fight" and "next turn" change shared state, and being able to
+   * name an intent is not permission to send one. Authorisation is decided
+   * here, server-side, next to the state it protects — never by hiding a button
+   * on a client that can simply send the message anyway.
+   */
+  actor: Viewer,
+  /**
+   * WHICH TABLE. The projection carries combatants, turns and rounds and
+   * nothing else — so an intent whose answer depends on per-session data the
+   * projection does not hold has no way to find it. Placing an arriving
+   * creature is the first: it needs the MAP, to know which squares are already
+   * spoken for, and the map is stored per campaign rather than folded from the
+   * log.
+   *
+   * An id rather than the room itself, deliberately. This module stays engine-
+   * agnostic and knows nothing about geometry; it hands over the one fact it
+   * already owns and lets whoever wired the resolver decide what to look up.
+   */
+  context: { playSessionId: string },
 ) => { ok: true; events: PlayEvent[] } | { ok: false; reason: string };
 
 export interface SyncCoreOptions {
   /**
-   * Resolve a session token to who the connection is. May be sync (a fixed test
-   * table) or async (real auth: JWT verify + a membership lookup — Brief 14 §1).
-   * `onHello` awaits either; existing synchronous resolvers are unchanged.
+   * Sync or async, so a bare dev server (no accounts) can resolve a token
+   * in-process while the real Brief 14 auth wiring (`makeResolveToken`, which
+   * looks up a JWT + a Postgres membership row) can await it. `onHello` awaits
+   * whichever it gets.
    */
-  resolveToken: (
-    token: string,
-    playSessionId: string,
-  ) => (ResolvedToken | null) | Promise<ResolvedToken | null>;
+  resolveToken: (token: string, playSessionId: string) => ResolvedToken | null | Promise<ResolvedToken | null>;
   resolveIntent: IntentResolver;
   /** initial combatants per session (pre-combat setup); the log folds on top. */
   initialCombatants?: (playSessionId: string) => Combatant[];
@@ -88,6 +108,10 @@ interface PendingPrompt {
   timer: ReturnType<typeof setTimeout>;
 }
 
+/** How much of the journal a fresh join is caught up on. Enough to read the
+    room; not so much that a long session floods a reconnect. */
+const RECENT_EVENTS = 100;
+
 export class SyncCore {
   private sessions = new Map<string, SessionState>();
   private connToSession = new Map<string, string>();
@@ -116,6 +140,7 @@ export class SyncCore {
       case 'hello': return this.onHello(conn, msg);
       case 'intent': return this.onIntent(conn, msg.envelope);
       case 'ping': return conn.send({ m: 'pong' });
+      case 'effect': return this.onEffect(conn, msg.effect);
       case 'ruling_response':
       case 'prompt_response': return this.onPromptResponse(conn, msg.promptId);
     }
@@ -138,6 +163,29 @@ export class SyncCore {
       const combatants = this.opts.initialCombatants?.(playSessionId) ?? [];
       s = { log: [], base: initialState(combatants), idempotency: new Map(), viewers: new Map(), writeChain: Promise.resolve() };
       this.sessions.set(playSessionId, s);
+      return s;
+    }
+
+    /**
+     * RESEAT ANYBODY WHO ARRIVED AFTER THE SESSION OPENED.
+     *
+     * The base was built once, when the first person said hello — so a player
+     * who made their character afterwards never reached the table at all. The
+     * DM opened the lobby, the session came into being empty, and every
+     * character created from that moment on was invisible to it: "There is
+     * nobody here to fight" with a full party standing in the room (found by
+     * running it, 2026-08-23).
+     *
+     * Only ADDING is safe. The log has folded on top of this base since the
+     * session opened, so replacing a combatant already in it would silently
+     * undo every wound and condition the fight has applied. A newcomer has no
+     * history to lose, which is exactly why they are the only case handled
+     * here — anything else is a mid-session character change, and that is an
+     * event, not a reseat.
+     */
+    const seated = this.opts.initialCombatants?.(playSessionId) ?? [];
+    for (const c of seated) {
+      if (!s.base.combatants[c.id]) s.base.combatants[c.id] = c;
     }
     return s;
   }
@@ -163,24 +211,25 @@ export class SyncCore {
     return done;
   }
 
+  /**
+   * A truly synchronous resolveToken (the bare dev server, and every existing
+   * golden test) must finish `hello` in the same tick `onMessage` was called —
+   * `await`ing even a non-Promise value still costs a microtask, which is enough
+   * to reorder a test that calls `hello()` then inspects `received` immediately
+   * after. So this only goes through the Promise branch when the caller's
+   * `resolveToken` actually returned one (the real Brief 14 auth, which awaits a
+   * JWT verify + a Postgres membership lookup).
+   */
   private onHello(conn: Connection, msg: Extract<ClientMsg, { m: 'hello' }>): void {
-    const resolved = this.opts.resolveToken(msg.token, msg.playSessionId);
-    // A sync resolver (fixed test table) settles the hello inline — existing wire
-    // tests still see `welcome` synchronously. An async resolver (real auth: JWT
-    // verify + membership lookup, Brief 14 §1) defers the same completion to a
-    // microtask; nothing else in the hello path is order-sensitive.
-    if (resolved instanceof Promise) {
-      void resolved.then((r) => this.completeHello(conn, msg, r));
+    const maybe = this.opts.resolveToken(msg.token, msg.playSessionId);
+    if (maybe instanceof Promise) {
+      maybe.then((resolved) => this.finishHello(conn, msg, resolved)).catch(() => this.err(conn, 'bad_message'));
     } else {
-      this.completeHello(conn, msg, resolved);
+      this.finishHello(conn, msg, maybe);
     }
   }
 
-  private completeHello(
-    conn: Connection,
-    msg: Extract<ClientMsg, { m: 'hello' }>,
-    resolved: ResolvedToken | null,
-  ): void {
+  private finishHello(conn: Connection, msg: Extract<ClientMsg, { m: 'hello' }>, resolved: ResolvedToken | null): void {
     if (!resolved) return this.err(conn, 'auth');
     if (resolved.playSessionId !== msg.playSessionId) return this.err(conn, 'not_member');
 
@@ -196,6 +245,23 @@ export class SyncCore {
       const visible = filterStream(s.log, viewer);
       const snapshot = fold(s.base, visible); // fold(log) — the one projection function (§2.8)
       conn.send({ m: 'welcome', viewer: { role: resolved.role }, snapshotSeq: currentSeq, snapshot });
+      /**
+       * The story so far, replayed.
+       *
+       * A fresh join gets a folded snapshot, and folding keeps NUMBERS: hit
+       * points, positions, conditions. Narration is not a number — it never
+       * survives the fold, so a player walking from the lobby into the table
+       * arrived to an empty journal every time and the session's opening line
+       * was simply gone (owner, 2026-08-23).
+       *
+       * Replaying the visible tail fixes that without weakening anything:
+       * every event still passes eventVisibleTo, so a latecomer sees exactly
+       * what they would have seen had they been connected — and no whisper
+       * meant for somebody else.
+       */
+      for (const e of filterStream(s.log, viewer).slice(-RECENT_EVENTS)) {
+        conn.send({ m: 'event', event: e });
+      }
     } else {
       // reconnect → welcome with snapshot up to lastSeq, then replay filtered (lastSeq, now]
       const upTo = s.log.filter((e) => e.seq <= msg.lastSeq!);
@@ -222,7 +288,10 @@ export class SyncCore {
 
     // validate → legality → cascade or reject (§2.4). Reject reason == greying string.
     const state = fold(s.base, s.log);
-    const result = this.opts.resolveIntent(envelope, state);
+    /* The viewer was established at hello and is the server's own record of
+       who this connection is — not anything the client asserted in the frame. */
+    const viewer = s.viewers.get(conn.connId)!.viewer;
+    const result = this.opts.resolveIntent(envelope, state, viewer, { playSessionId: sid });
     if (!result.ok) {
       conn.send({ m: 'intent_rejected', idempotencyKey: envelope.idempotencyKey, reason: result.reason });
       return;
@@ -244,6 +313,27 @@ export class SyncCore {
     // path is not blocked on the DB.
     this.persist(s, sid, result.events, envelope.idempotencyKey, firstSeq);
     conn.send({ m: 'intent_ack', idempotencyKey: envelope.idempotencyKey, accepted: true, firstSeq });
+  }
+
+  /**
+   * Relay a screen effect to everybody at the table (Brief 10 §4).
+   *
+   * NOTHING IS STORED. It does not touch the log, does not get a seq, and is
+   * never replayed — a viewer who was not connected simply missed the thunder,
+   * which is exactly right for weather. Storing it would put "shake" in the
+   * play record between two lines of narration.
+   *
+   * Only whoever runs the game may send one, for the same reason only they may
+   * start a fight: it changes what everybody is looking at.
+   */
+  private onEffect(conn: Connection, effect: EffectId): void {
+    const sid = this.connToSession.get(conn.connId);
+    if (!sid) return this.err(conn, 'not_member');
+    const s = this.sessions.get(sid)!;
+    const me = s.viewers.get(conn.connId);
+    if (!me || me.role !== 'dm') return this.err(conn, 'not_member');
+
+    for (const { conn: c } of s.viewers.values()) c.send({ m: 'effect', effect });
   }
 
   private onPromptResponse(conn: Connection, promptId: string): void {

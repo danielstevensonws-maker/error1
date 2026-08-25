@@ -1,94 +1,89 @@
 /**
- * Token hygiene: components consume the design system's --qa-* tokens and
- * introduce NO new colour/size values of their own.
+ * Token hygiene (ADR-0014).
  *
- * We scan every component .tsx for raw colour literals (#hex / rgb / rgba /
- * hsl). The only literals allowed are the exact ones the design-system
- * reference .jsx files themselves ship inline — kept verbatim so the port
- * matches the reference pixel-for-pixel. Any OTHER literal is drift and fails.
+ * The contract is: drop a new token set into @questra/theme and the whole app
+ * re-themes with NO component edits. That only holds if components never bake
+ * in a literal colour, font, or duration. This suite reads every component
+ * source and fails on a hardcoded value.
  *
- * If the design legitimately adds a colour, it belongs in a --qa-* token in
- * @questra/theme first (and then here as a var()), not hard-coded in a component.
+ * It is deliberately a source-text test rather than a render test: the point is
+ * to catch the literal at authoring time, in any component, without needing to
+ * mount it.
  */
 import { describe, it, expect } from 'vitest';
-import { readFileSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const dirs = ['core', 'hud'] as const;
+const here = dirname(fileURLToPath(import.meta.url));
+const srcRoot = join(here, '../src');
 
-/**
- * Literals present verbatim in the design-system reference .jsx and intentionally
- * preserved. Each is a design value that does not correspond to an existing
- * --qa-* token (or a gradient the reference hard-codes). Reviewed and pinned.
- */
-const ALLOWED_LITERALS = new Set<string>([
-  // Button.jsx — hex gradients for the primary/hex variants
-  '#D97B5F', // == --qa-ember-bright, but reference hard-codes it in a gradient
-  '#8E4230', // == --qa-ember-deep
-  '#221A0E', // == --qa-ink-raised2
-  '#161109', // near --qa-ink; reference literal
-  // MapToken.jsx — initial ink + tag scrim
-  '#F0E8D4', // token-adjacent vellum for the on-token initial
-  '#F2F3F5', // (none expected; placeholder-safe)
-]);
-
-// rgba() literals the reference ships (semantic hues at low alpha, dark scrims,
-// spotlight rings). These are design values with no standalone token.
-const ALLOWED_RGBA_SUBSTRINGS = [
-  'rgba(192,86,62,',
-  'rgba(192,91,65,',
-  'rgba(143,184,154,',
-  'rgba(154,143,184,',
-  'rgba(143,163,184,',
-  'rgba(214,150,90,',
-  'rgba(230,220,196,', // spotlight ring / unhurt tag
-  'rgba(0,0,0,',
-  'rgba(5,6,9,',
-];
-
-const HEX = /#[0-9a-fA-F]{3,8}\b/g;
-const RGBA = /rgba?\([^)]*\)/g;
-
-// vitest runs with cwd = the package root, so resolve src/ from there.
-const SRC = join(process.cwd(), 'src');
-
-function componentFiles(): string[] {
-  const out: string[] = [];
-  for (const d of dirs) {
-    const dir = join(SRC, d);
-    for (const f of readdirSync(dir)) {
-      if (f.endsWith('.tsx')) out.push(join(dir, f));
-    }
-  }
-  return out;
+function sourceFiles(dir: string): string[] {
+  return readdirSync(dir).flatMap((entry) => {
+    const full = join(dir, entry);
+    if (statSync(full).isDirectory()) return sourceFiles(full);
+    return /\.tsx?$/.test(entry) ? [full] : [];
+  });
 }
 
-describe('components introduce no un-tokenized colour values', () => {
-  const files = componentFiles();
+const files = sourceFiles(srcRoot).map((path) => ({
+  path: path.slice(srcRoot.length + 1).replace(/\\/g, '/'),
+  text: readFileSync(path, 'utf8'),
+}));
 
-  it('found the component files', () => {
-    expect(files.length).toBe(11);
+/** Strip block/line comments so prose examples don't trip the scanners. */
+const codeOf = (text: string) =>
+  text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+
+describe('components hardcode no design values', () => {
+  it('finds component sources to scan', () => {
+    expect(files.length).toBeGreaterThan(0);
   });
 
-  it.each(files)('%s uses only tokens + the pinned reference literals', (file) => {
-    // scan code only — strip comments so prose like "rgba() values" isn't flagged
-    const src = readFileSync(file, 'utf8')
-      .replace(/\/\*[\s\S]*?\*\//g, '')
-      .replace(/\/\/[^\n]*/g, '');
-
-    const hexes = src.match(HEX) ?? [];
-    const strayHex = hexes.filter((h) => !ALLOWED_LITERALS.has(h.toUpperCase()) && !ALLOWED_LITERALS.has(h));
-    expect(strayHex, `un-pinned hex literal(s) in ${file}: ${strayHex.join(', ')}`).toEqual([]);
-
-    const rgbas = src.match(RGBA) ?? [];
-    const strayRgba = rgbas.filter((r) => !ALLOWED_RGBA_SUBSTRINGS.some((a) => r.startsWith(a)));
-    expect(strayRgba, `un-pinned rgba literal(s) in ${file}: ${strayRgba.join(', ')}`).toEqual([]);
+  it('no hex colours', () => {
+    for (const { path, text } of files) {
+      const hits = codeOf(text).match(/#[0-9a-fA-F]{3,8}\b/g);
+      expect(hits, `${path} hardcodes a hex colour: ${hits?.join(', ')}`).toBeNull();
+    }
   });
 
-  it('every component references at least one --qa-* token', () => {
-    for (const file of files) {
-      const src = readFileSync(file, 'utf8');
-      expect(src.includes('var(--qa-'), `${file} references no --qa-* token`).toBe(true);
+  it('no rgb()/rgba()/hsl() literals', () => {
+    for (const { path, text } of files) {
+      const hits = codeOf(text).match(/\b(rgba?|hsla?)\s*\(/g);
+      expect(hits, `${path} hardcodes a colour function: ${hits?.join(', ')}`).toBeNull();
+    }
+  });
+
+  it('no literal transition/animation durations', () => {
+    for (const { path, text } of files) {
+      // A bare `220ms` or `0.2s` in a style value; var(--qa-dur) is the only way.
+      const hits = codeOf(text).match(/\b\d+(\.\d+)?m?s\b/g);
+      expect(hits, `${path} hardcodes a duration: ${hits?.join(', ')}`).toBeNull();
+    }
+  });
+
+  it('no hardcoded font families', () => {
+    for (const { path, text } of files) {
+      const hits = codeOf(text).match(/\b(serif|sans-serif|monospace|IM Fell|EB Garamond|IBM Plex)\b/g);
+      expect(hits, `${path} hardcodes a font family: ${hits?.join(', ')}`).toBeNull();
+    }
+  });
+});
+
+describe('components read the token layer', () => {
+  it('every component that styles anything uses var(--qa-*)', () => {
+    const styled = files.filter(({ text }) => /style\s*[=:]/.test(codeOf(text)));
+    expect(styled.length).toBeGreaterThan(0);
+    for (const { path, text } of styled) {
+      expect(text, `${path} styles without reading a --qa-* token`).toMatch(/var\(--qa-/);
+    }
+  });
+
+  it('no component pins itself to a specific theme', () => {
+    // Reading [data-qa-theme="ghost"] in a component would defeat the switch:
+    // slate/ivory could never override it. Themes are selected by the host.
+    for (const { path, text } of files) {
+      expect(codeOf(text), `${path} pins a named theme`).not.toMatch(/data-qa-theme\s*=\s*["']\w/);
     }
   });
 });

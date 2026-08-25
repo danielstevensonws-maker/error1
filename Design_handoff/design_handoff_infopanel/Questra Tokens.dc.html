@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     QUESTRA · --qa-* TOKEN CONTRACT  (ADR-0014)
+     Paste this block into theme/tokens.css. Swap [data-qa-theme]
+     and every component re-skins with ZERO component edits.
+     ============================================================ */
+  [data-qa-theme]{
+    /* — the one accent: a semantic ember, never decorative — */
+    --qa-accent:#C05B41;
+    --qa-accent-ink:#FBEEE6;
+    --qa-accent-soft:rgba(192,91,65,.22);
+    --qa-accent-line:rgba(192,91,65,.55);
+    --qa-accent-glow:rgba(192,91,65,.45);
+
+    /* — semantic hues, each carries ONE meaning — */
+    --qa-danger:#C8453A;          /* bloodied HP · dying · urgent countdown */
+    --qa-danger-soft:rgba(200,69,58,.20);
+    --qa-success:#6F9463;         /* death-save success · stable · legal */
+    --qa-success-soft:rgba(111,148,99,.20);
+    --qa-gold:#C79A47;            /* a roll entered by hand (physical dice) */
+    --qa-gold-soft:rgba(199,154,71,.20);
+
+    /* — the map ground: a warm pool of candlelight into the dark — */
+    --qa-map-hi:#2A2115;
+    --qa-map-mid:#1B1610;
+    --qa-map-lo:#12100A;
+    --qa-map-grid:rgba(230,220,196,.05);
+
+    /* — type — */
+    --qa-font-display:'IM Fell English', Georgia, serif;   /* the storytelling voice */
+    --qa-font-body:'EB Garamond', Georgia, serif;          /* prose is a serif */
+    --qa-font-mono:'IBM Plex Mono', ui-monospace, monospace; /* data is mono */
+    --qa-tracking-caps:.16em;
+    --qa-text-whisper:10px;
+    --qa-text-label:12px;
+    --qa-text-body:16px;
+    --qa-text-lg:20px;
+    --qa-text-title:28px;
+    --qa-text-display:40px;
+    --qa-text-hero:64px;
+
+    /* — spacing (4pt base) — */
+    --qa-s1:4px; --qa-s2:8px; --qa-s3:12px; --qa-s4:16px;
+    --qa-s5:24px; --qa-s6:32px; --qa-s7:48px; --qa-s8:64px;
+    --qa-hud-inset:24px;
+
+    /* — restrained corners — */
+    --qa-radius-sm:3px; --qa-radius:6px; --qa-radius-lg:10px; --qa-radius-round:999px;
+    --qa-hairline:1px;
+
+    /* — motion: precise & damped — */
+    --qa-dur-fast:120ms; --qa-dur:220ms; --qa-dur-slow:420ms;
+    --qa-dice-settle:840ms;
+    --qa-ease:cubic-bezier(.2,.7,.2,1);
+    --qa-ease-out:cubic-bezier(.16,1,.3,1);
+
+    /* — floated-glass elevation — */
+    --qa-shadow:0 18px 48px -18px rgba(0,0,0,.72), 0 2px 8px rgba(0,0,0,.35);
+    --qa-shadow-pop:0 30px 70px -22px rgba(0,0,0,.8);
+  }
+
+  /* ghost — warm dark · the default */
+  [data-qa-theme="ghost"]{
+    --qa-glass:rgba(19,16,9,.55);
+    --qa-glass-solid:rgba(28,24,15,.94);
+    --qa-glass-border:rgba(230,220,196,.14);
+    --qa-glass-blur:14px;
+    --qa-chip:rgba(230,220,196,.08);
+    --qa-scrim:rgba(10,8,4,.55);
+    --qa-ink:#E6DCC4;
+    --qa-ink-dim:rgba(230,220,196,.62);
+    --qa-ink-faint:rgba(230,220,196,.34);
+  }
+  /* slate — cool dark */
+  [data-qa-theme="slate"]{
+    --qa-glass:rgba(17,21,29,.68);
+    --qa-glass-solid:rgba(22,27,37,.95);
+    --qa-glass-border:rgba(233,237,244,.15);
+    --qa-glass-blur:20px;
+    --qa-chip:rgba(233,237,244,.08);
+    --qa-scrim:rgba(6,9,14,.6);
+    --qa-ink:#E9EDF4;
+    --qa-ink-dim:rgba(233,237,244,.6);
+    --qa-ink-faint:rgba(233,237,244,.32);
+  }
+  /* ivory — light */
+  [data-qa-theme="ivory"]{
+    --qa-glass:rgba(243,240,233,.6);
+    --qa-glass-solid:rgba(247,244,237,.96);
+    --qa-glass-border:rgba(32,29,24,.16);
+    --qa-glass-blur:16px;
+    --qa-chip:rgba(32,29,24,.06);
+    --qa-scrim:rgba(32,29,24,.4);
+    --qa-ink:#201D18;
+    --qa-ink-dim:rgba(32,29,24,.62);
+    --qa-ink-faint:rgba(32,29,24,.36);
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:#12100A}
+  a{color:var(--qa-accent);text-decoration:none}
+  a:hover{color:var(--qa-accent-line)}
+  @keyframes qa-pulse{0%,100%{box-shadow:0 0 0 0 var(--qa-accent-glow)}50%{box-shadow:0 0 0 8px rgba(192,91,65,0)}}
+  @keyframes qa-blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+  [data-qa-rm="on"] *{animation:none !important;transition:none !important}
+</style>
+</helmet>
+
+<div data-qa-theme="{{ theme }}" data-qa-rm="{{ rm }}" style="min-height:100vh;font-family:var(--qa-font-body);color:var(--qa-ink);background:radial-gradient(120% 90% at 50% 22%, var(--qa-map-hi) 0%, var(--qa-map-mid) 42%, var(--qa-map-lo) 100%);position:relative;padding:var(--qa-s8) 0 var(--qa-s8);overflow:hidden">
+
+  <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(var(--qa-map-grid) 1px, transparent 1px);background-size:96px 96px;opacity:.6"></div>
+  <div style="position:absolute;inset:0;pointer-events:none;background:radial-gradient(130% 100% at 50% 26%, transparent 46%, rgba(0,0,0,.5) 100%)"></div>
+
+  <div style="position:relative;max-width:1040px;margin:0 auto;padding:0 var(--qa-s7)">
+
+    <!-- ===== masthead ===== -->
+    <header style="display:flex;justify-content:space-between;align-items:flex-end;gap:var(--qa-s5);flex-wrap:wrap;margin-bottom:var(--qa-s7)">
+      <div style="max-width:560px">
+        <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);letter-spacing:var(--qa-tracking-caps);text-transform:uppercase;color:var(--qa-ink-dim);margin-bottom:var(--qa-s3)">Questra · Design tokens · ADR-0014</div>
+        <h1 style="font-family:var(--qa-font-display);font-weight:400;font-size:var(--qa-text-display);line-height:1.05;margin:0 0 var(--qa-s3)">The token contract</h1>
+        <p style="font-family:var(--qa-font-body);font-size:var(--qa-text-lg);line-height:1.5;color:var(--qa-ink-dim);margin:0;text-wrap:pretty">Every surface reads from these <span style="font-family:var(--qa-font-mono);font-size:.85em;color:var(--qa-ink)">--qa-*</span> variables. Switch the theme below — nothing here is restyled by hand; the swatches re-skin because they were only ever pointing at the tokens.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:var(--qa-s3);align-items:flex-end">
+        <div role="radiogroup" aria-label="Glass theme" style="display:flex;gap:var(--qa-s1);padding:var(--qa-s1);background:var(--qa-glass);border:var(--qa-hairline) solid var(--qa-glass-border);border-radius:var(--qa-radius-lg);backdrop-filter:blur(var(--qa-glass-blur));-webkit-backdrop-filter:blur(var(--qa-glass-blur))">
+          <sc-for list="{{ themes }}" as="t" hint-placeholder-count="3">
+            <button role="radio" aria-checked="{{ t.on }}" onClick="{{ t.pick }}" style="{{ t.style }}">{{ t.name }}</button>
+          </sc-for>
+        </div>
+        <button onClick="{{ toggleRm }}" style="{{ rmStyle }}"><span style="font-family:var(--qa-font-mono)">{{ rmMark }}</span> reduce motion</button>
+      </div>
+    </header>
+
+    <!-- ===== the three glass themes ===== -->
+    <section style="margin-bottom:var(--qa-s8)">
+      <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-label);letter-spacing:var(--qa-tracking-caps);text-transform:uppercase;color:var(--qa-ink-dim);margin-bottom:var(--qa-s4);padding-bottom:var(--qa-s3);border-bottom:var(--qa-hairline) solid var(--qa-glass-border)">01 · Glass — three themes, one structure</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--qa-s4)">
+        <sc-for list="{{ glassThemes }}" as="g" hint-placeholder-count="3">
+          <div style="border-radius:var(--qa-radius-lg);overflow:hidden;border:var(--qa-hairline) solid rgba(230,220,196,.1)">
+            <div data-qa-theme="{{ g.key }}" style="padding:var(--qa-s4);background:var(--qa-glass-solid)">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:var(--qa-s4)">
+                <span style="font-family:var(--qa-font-display);font-size:var(--qa-text-lg);color:var(--qa-ink)">{{ g.name }}</span>
+                <span style="font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);color:var(--qa-ink-dim)">{{ g.note }}</span>
+              </div>
+              <div style="position:relative;border-radius:var(--qa-radius);overflow:hidden;background:radial-gradient(120% 120% at 40% 20%, var(--qa-map-hi), var(--qa-map-lo));padding:var(--qa-s4);min-height:150px;display:flex;flex-direction:column;gap:var(--qa-s2);justify-content:center">
+                <div style="background:var(--qa-glass);border:var(--qa-hairline) solid var(--qa-glass-border);border-radius:var(--qa-radius);backdrop-filter:blur(var(--qa-glass-blur));-webkit-backdrop-filter:blur(var(--qa-glass-blur));padding:var(--qa-s3) var(--qa-s4)">
+                  <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);letter-spacing:var(--qa-tracking-caps);text-transform:uppercase;color:var(--qa-ink-dim)">Armor Class</div>
+                  <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-title);color:var(--qa-ink);line-height:1">18</div>
+                  <div style="margin-top:var(--qa-s2);display:flex;gap:var(--qa-s1)">
+                    <span style="font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);background:var(--qa-chip);color:var(--qa-ink-dim);padding:2px 7px;border-radius:var(--qa-radius-round)">chip</span>
+                    <span style="font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);background:var(--qa-accent);color:var(--qa-accent-ink);padding:2px 7px;border-radius:var(--qa-radius-round)">ember</span>
+                  </div>
+                </div>
+              </div>
+              <dl style="margin:var(--qa-s4) 0 0;display:grid;grid-template-columns:auto 1fr;gap:var(--qa-s1) var(--qa-s3);font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);color:var(--qa-ink-dim)">
+                <dt>fill</dt><dd style="margin:0;text-align:right">{{ g.fill }}</dd>
+                <dt>blur</dt><dd style="margin:0;text-align:right">{{ g.blur }}</dd>
+                <dt>ink</dt><dd style="margin:0;text-align:right">{{ g.inkHex }}</dd>
+              </dl>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- ===== colour ===== -->
+    <section style="margin-bottom:var(--qa-s8)">
+      <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-label);letter-spacing:var(--qa-tracking-caps);text-transform:uppercase;color:var(--qa-ink-dim);margin-bottom:var(--qa-s4);padding-bottom:var(--qa-s3);border-bottom:var(--qa-hairline) solid var(--qa-glass-border)">02 · Colour — one accent, every other hue earns its place</div>
+
+      <div style="margin-bottom:var(--qa-s5)">
+        <div style="font-family:var(--qa-font-body);font-style:italic;font-size:var(--qa-text-body);color:var(--qa-ink-dim);margin-bottom:var(--qa-s3)">The accent — a semantic ember. Your token ring, the active target, the turn badge, primary actions. Never decoration.</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:var(--qa-s3)">
+          <sc-for list="{{ accentSwatches }}" as="s" hint-placeholder-count="5">
+            <div style="border-radius:var(--qa-radius);overflow:hidden;border:var(--qa-hairline) solid var(--qa-glass-border);background:var(--qa-glass);backdrop-filter:blur(var(--qa-glass-blur));-webkit-backdrop-filter:blur(var(--qa-glass-blur))">
+              <div style="height:56px;background:{{ s.bg }}"></div>
+              <div style="padding:var(--qa-s2) var(--qa-s3)">
+                <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);color:var(--qa-ink)">{{ s.var }}</div>
+                <div style="font-family:var(--qa-font-body);font-size:var(--qa-text-label);color:var(--qa-ink-dim);line-height:1.3;margin-top:2px">{{ s.use }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-family:var(--qa-font-body);font-style:italic;font-size:var(--qa-text-body);color:var(--qa-ink-dim);margin-bottom:var(--qa-s3)">Semantic hues — each carries exactly one meaning, so colour never means two things at once.</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:var(--qa-s3)">
+          <sc-for list="{{ semanticSwatches }}" as="s" hint-placeholder-count="3">
+            <div style="border-radius:var(--qa-radius);overflow:hidden;border:var(--qa-hairline) solid var(--qa-glass-border);background:var(--qa-glass);backdrop-filter:blur(var(--qa-glass-blur));-webkit-backdrop-filter:blur(var(--qa-glass-blur))">
+              <div style="height:56px;background:{{ s.bg }}"></div>
+              <div style="padding:var(--qa-s2) var(--qa-s3)">
+                <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);color:var(--qa-ink)">{{ s.var }}</div>
+                <div style="font-family:var(--qa-font-body);font-size:var(--qa-text-label);color:var(--qa-ink-dim);line-height:1.3;margin-top:2px">{{ s.use }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== type ===== -->
+    <section style="margin-bottom:var(--qa-s8)">
+      <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-label);letter-spacing:var(--qa-tracking-caps);text-transform:uppercase;color:var(--qa-ink-dim);margin-bottom:var(--qa-s4);padding-bottom:var(--qa-s3);border-bottom:var(--qa-hairline) solid var(--qa-glass-border)">03 · Type — prose is a serif, data is mono</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--qa-s4)">
+        <div style="background:var(--qa-glass);border:var(--qa-hairline) solid var(--qa-glass-border);border-radius:var(--qa-radius-lg);backdrop-filter:blur(var(--qa-glass-blur));-webkit-backdrop-filter:blur(var(--qa-glass-blur));padding:var(--qa-s5)">
+          <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);letter-spacing:var(--qa-tracking-caps);text-transform:uppercase;color:var(--qa-ink-dim);margin-bottom:var(--qa-s3)">Display · IM Fell English</div>
+          <div style="font-family:var(--qa-font-display);font-size:var(--qa-text-title);line-height:1.1;color:var(--qa-ink)">The lookout's eyes are on you now.</div>
+          <div style="font-family:var(--qa-font-body);font-size:var(--qa-text-label);color:var(--qa-ink-faint);margin-top:var(--qa-s3)">DM narration · portrait names · the storytelling voice</div>
+        </div>
+        <div style="background:var(--qa-glass);border:var(--qa-hairline) solid var(--qa-glass-border);border-radius:var(--qa-radius-lg);backdrop-filter:blur(var(--qa-glass-blur));-webkit-backdrop-filter:blur(var(--qa-glass-blur));padding:var(--qa-s5)">
+          <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);letter-spacing:var(--qa-tracking-caps);text-transform:uppercase;color:var(--qa-ink-dim);margin-bottom:var(--qa-s3)">Body · EB Garamond</div>
+          <div style="font-family:var(--qa-font-body);font-size:var(--qa-text-lg);line-height:1.45;color:var(--qa-ink)">A 10 or higher is a success. <em style="font-style:italic">Supple leather, oiled quiet — armor for someone who plans not to be hit at all.</em></div>
+          <div style="font-family:var(--qa-font-body);font-size:var(--qa-text-label);color:var(--qa-ink-faint);margin-top:var(--qa-s3)">Body · labels · most UI · italic for fiction</div>
+        </div>
+        <div style="background:var(--qa-glass);border:var(--qa-hairline) solid var(--qa-glass-border);border-radius:var(--qa-radius-lg);backdrop-filter:blur(var(--qa-glass-blur));-webkit-backdrop-filter:blur(var(--qa-glass-blur));padding:var(--qa-s5)">
+          <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);letter-spacing:var(--qa-tracking-caps);text-transform:uppercase;color:var(--qa-ink-dim);margin-bottom:var(--qa-s3)">Mono · IBM Plex Mono</div>
+          <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-title);color:var(--qa-ink);line-height:1.1">14 <span style="font-size:var(--qa-text-label);color:var(--qa-ink-dim)">(dropped 6)</span></div>
+          <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-label);color:var(--qa-ink-dim);margin-top:var(--qa-s2)">DEX +3 · PROF +2 · AC 15</div>
+          <div style="font-family:var(--qa-font-body);font-size:var(--qa-text-label);color:var(--qa-ink-faint);margin-top:var(--qa-s3)">Every number · dice total · timer · small-caps label</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:var(--qa-s2);margin-top:var(--qa-s4)">
+        <sc-for list="{{ typeScale }}" as="ts" hint-placeholder-count="7">
+          <div style="background:var(--qa-chip);border:var(--qa-hairline) solid var(--qa-glass-border);border-radius:var(--qa-radius);padding:var(--qa-s2) var(--qa-s3);font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);color:var(--qa-ink-dim)"><span style="color:var(--qa-ink)">{{ ts.name }}</span> · {{ ts.px }}</div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- ===== spacing + radius + motion ===== -->
+    <section style="margin-bottom:var(--qa-s8)">
+      <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-label);letter-spacing:var(--qa-tracking-caps);text-transform:uppercase;color:var(--qa-ink-dim);margin-bottom:var(--qa-s4);padding-bottom:var(--qa-s3);border-bottom:var(--qa-hairline) solid var(--qa-glass-border)">04 · Space, corners &amp; motion</div>
+      <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:var(--qa-s4)">
+        <div style="background:var(--qa-glass);border:var(--qa-hairline) solid var(--qa-glass-border);border-radius:var(--qa-radius-lg);backdrop-filter:blur(var(--qa-glass-blur));-webkit-backdrop-filter:blur(var(--qa-glass-blur));padding:var(--qa-s5)">
+          <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);letter-spacing:var(--qa-tracking-caps);text-transform:uppercase;color:var(--qa-ink-dim);margin-bottom:var(--qa-s4)">Spacing · 4pt base</div>
+          <div style="display:flex;align-items:flex-end;gap:var(--qa-s3)">
+            <sc-for list="{{ spaceScale }}" as="sp" hint-placeholder-count="8">
+              <div style="text-align:center">
+                <div style="width:{{ sp.px }};height:{{ sp.px }};background:var(--qa-accent-soft);border:var(--qa-hairline) solid var(--qa-accent-line);border-radius:var(--qa-radius-sm)"></div>
+                <div style="font-family:var(--qa-font-mono);font-size:9px;color:var(--qa-ink-dim);margin-top:var(--qa-s2)">{{ sp.name }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);letter-spacing:var(--qa-tracking-caps);text-transform:uppercase;color:var(--qa-ink-dim);margin:var(--qa-s5) 0 var(--qa-s4)">Corners · restrained</div>
+          <div style="display:flex;gap:var(--qa-s3)">
+            <sc-for list="{{ radiusScale }}" as="r" hint-placeholder-count="4">
+              <div style="text-align:center">
+                <div style="width:52px;height:52px;background:var(--qa-chip);border:var(--qa-hairline) solid var(--qa-glass-border);border-radius:{{ r.val }}"></div>
+                <div style="font-family:var(--qa-font-mono);font-size:9px;color:var(--qa-ink-dim);margin-top:var(--qa-s2)">{{ r.name }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="background:var(--qa-glass);border:var(--qa-hairline) solid var(--qa-glass-border);border-radius:var(--qa-radius-lg);backdrop-filter:blur(var(--qa-glass-blur));-webkit-backdrop-filter:blur(var(--qa-glass-blur));padding:var(--qa-s5);display:flex;flex-direction:column">
+          <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);letter-spacing:var(--qa-tracking-caps);text-transform:uppercase;color:var(--qa-ink-dim);margin-bottom:var(--qa-s4)">Motion · precise &amp; damped</div>
+          <div style="display:flex;align-items:center;gap:var(--qa-s4);margin-bottom:var(--qa-s4)">
+            <div style="width:44px;height:44px;border-radius:var(--qa-radius-round);background:var(--qa-accent);animation:qa-pulse 2.4s var(--qa-ease) infinite;flex:none"></div>
+            <div style="font-family:var(--qa-font-body);font-size:var(--qa-text-label);color:var(--qa-ink-dim);line-height:1.4">Your token's ring, pulsing. Every animation has a still equivalent — toggle <span style="font-family:var(--qa-font-mono);color:var(--qa-ink)">reduce motion</span> above and this holds still.</div>
+          </div>
+          <dl style="margin:0;display:grid;grid-template-columns:auto 1fr;gap:var(--qa-s2) var(--qa-s4);font-family:var(--qa-font-mono);font-size:var(--qa-text-label)">
+            <dt style="color:var(--qa-ink-dim)">--qa-dur</dt><dd style="margin:0;color:var(--qa-ink);text-align:right">220ms</dd>
+            <dt style="color:var(--qa-ink-dim)">--qa-dice-settle</dt><dd style="margin:0;color:var(--qa-ink);text-align:right">840ms</dd>
+            <dt style="color:var(--qa-ink-dim)">--qa-ease</dt><dd style="margin:0;color:var(--qa-ink);text-align:right;font-size:var(--qa-text-whisper)">cubic-bezier(.2,.7,.2,1)</dd>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== the paste block ===== -->
+    <section>
+      <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-label);letter-spacing:var(--qa-tracking-caps);text-transform:uppercase;color:var(--qa-ink-dim);margin-bottom:var(--qa-s4);padding-bottom:var(--qa-s3);border-bottom:var(--qa-hairline) solid var(--qa-glass-border)">05 · Paste into theme/tokens.css</div>
+      <pre style="margin:0;background:var(--qa-glass-solid);border:var(--qa-hairline) solid var(--qa-glass-border);border-radius:var(--qa-radius-lg);padding:var(--qa-s5);overflow:auto;font-family:var(--qa-font-mono);font-size:var(--qa-text-label);line-height:1.6;color:var(--qa-ink-dim);white-space:pre">{{ pasteBlock }}</pre>
+    </section>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1040,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = { theme: 'ghost', rm: 'off' };
+
+  renderVals() {
+    const theme = this.state.theme;
+    const themeDefs = [
+      { key:'ghost', name:'ghost' },
+      { key:'slate', name:'slate' },
+      { key:'ivory', name:'ivory' },
+    ];
+    const pillBase = 'font-family:var(--qa-font-mono);font-size:var(--qa-text-label);padding:6px 14px;border-radius:var(--qa-radius);cursor:pointer;border:var(--qa-hairline) solid transparent;transition:all var(--qa-dur) var(--qa-ease);text-transform:lowercase;';
+    const themes = themeDefs.map(t => ({
+      name: t.name,
+      on: theme === t.key,
+      pick: () => this.setState({ theme: t.key }),
+      style: pillBase + (theme === t.key
+        ? 'background:var(--qa-accent);color:var(--qa-accent-ink);'
+        : 'background:transparent;color:var(--qa-ink-dim);'),
+    }));
+
+    const rmOn = this.state.rm === 'on';
+    const rmStyle = 'font-family:var(--qa-font-body);font-size:var(--qa-text-label);padding:6px 12px;border-radius:var(--qa-radius);cursor:pointer;transition:all var(--qa-dur) var(--qa-ease);border:var(--qa-hairline) solid var(--qa-glass-border);'
+      + (rmOn ? 'background:var(--qa-chip);color:var(--qa-ink);' : 'background:transparent;color:var(--qa-ink-dim);');
+
+    const glassThemes = [
+      { key:'ghost', name:'ghost', note:'warm dark · default', fill:'rgba(19,16,9,.55)', blur:'14px', inkHex:'#E6DCC4' },
+      { key:'slate', name:'slate', note:'cool dark', fill:'rgba(17,21,29,.68)', blur:'20px', inkHex:'#E9EDF4' },
+      { key:'ivory', name:'ivory', note:'light', fill:'rgba(243,240,233,.60)', blur:'16px', inkHex:'#201D18' },
+    ];
+
+    const accentSwatches = [
+      { var:'--qa-accent', use:'primary action · turn badge · #C05B41', bg:'var(--qa-accent)' },
+      { var:'--qa-accent-line', use:'your token ring · active target edge', bg:'var(--qa-accent-line)' },
+      { var:'--qa-accent-soft', use:'ring glow fill · selected wash', bg:'var(--qa-accent-soft)' },
+      { var:'--qa-accent-ink', use:'text sitting on the ember', bg:'var(--qa-accent-ink)' },
+    ];
+    const semanticSwatches = [
+      { var:'--qa-danger', use:'bloodied HP · dying · urgent', bg:'var(--qa-danger)' },
+      { var:'--qa-success', use:'death-save success · stable', bg:'var(--qa-success)' },
+      { var:'--qa-gold', use:'a roll entered by hand', bg:'var(--qa-gold)' },
+    ];
+
+    const typeScale = [
+      { name:'whisper', px:'10px' }, { name:'label', px:'12px' }, { name:'body', px:'16px' },
+      { name:'lg', px:'20px' }, { name:'title', px:'28px' }, { name:'display', px:'40px' }, { name:'hero', px:'64px' },
+    ];
+    const spaceScale = [
+      { name:'s1', px:'4px' }, { name:'s2', px:'8px' }, { name:'s3', px:'12px' }, { name:'s4', px:'16px' },
+      { name:'s5', px:'24px' }, { name:'s6', px:'32px' }, { name:'s7', px:'48px' }, { name:'s8', px:'64px' },
+    ];
+    const radiusScale = [
+      { name:'sm · 3', val:'3px' }, { name:'base · 6', val:'6px' }, { name:'lg · 10', val:'10px' }, { name:'round', val:'999px' },
+    ];
+
+    const pasteBlock =
+`[data-qa-theme]{
+  --qa-accent:#C05B41; --qa-accent-ink:#FBEEE6;
+  --qa-accent-soft:rgba(192,91,65,.22); --qa-accent-line:rgba(192,91,65,.55);
+  --qa-danger:#C8453A;  /* bloodied · dying · urgent   */
+  --qa-success:#6F9463; /* save success · stable       */
+  --qa-gold:#C79A47;    /* roll entered by hand         */
+  --qa-map-hi:#2A2115; --qa-map-mid:#1B1610; --qa-map-lo:#12100A;
+  --qa-font-display:'IM Fell English',serif; /* the story */
+  --qa-font-body:'EB Garamond',serif;        /* prose     */
+  --qa-font-mono:'IBM Plex Mono',monospace;  /* data      */
+  --qa-s1:4px; --qa-s4:16px; --qa-s8:64px; --qa-hud-inset:24px;
+  --qa-radius:6px; --qa-radius-lg:10px; --qa-hairline:1px;
+  --qa-dur:220ms; --qa-dice-settle:840ms;
+  --qa-ease:cubic-bezier(.2,.7,.2,1);
+}
+[data-qa-theme="ghost"]{  /* warm dark · default */
+  --qa-glass:rgba(19,16,9,.55); --qa-glass-solid:rgba(28,24,15,.94);
+  --qa-glass-border:rgba(230,220,196,.14); --qa-glass-blur:14px;
+  --qa-chip:rgba(230,220,196,.08);
+  --qa-ink:#E6DCC4; --qa-ink-dim:rgba(230,220,196,.62); --qa-ink-faint:rgba(230,220,196,.34);
+}
+[data-qa-theme="slate"]{  /* cool dark */
+  --qa-glass:rgba(17,21,29,.68); --qa-glass-solid:rgba(22,27,37,.95);
+  --qa-glass-border:rgba(233,237,244,.15); --qa-glass-blur:20px;
+  --qa-chip:rgba(233,237,244,.08);
+  --qa-ink:#E9EDF4; --qa-ink-dim:rgba(233,237,244,.60); --qa-ink-faint:rgba(233,237,244,.32);
+}
+[data-qa-theme="ivory"]{  /* light */
+  --qa-glass:rgba(243,240,233,.60); --qa-glass-solid:rgba(247,244,237,.96);
+  --qa-glass-border:rgba(32,29,24,.16); --qa-glass-blur:16px;
+  --qa-chip:rgba(32,29,24,.06);
+  --qa-ink:#201D18; --qa-ink-dim:rgba(32,29,24,.62); --qa-ink-faint:rgba(32,29,24,.36);
+}`;
+
+    return {
+      theme, rm: this.state.rm, themes, rmStyle, toggleRm: () => this.setState(s => ({ rm: s.rm === 'on' ? 'off' : 'on' })),
+      rmMark: rmOn ? '✓' : '·',
+      glassThemes, accentSwatches, semanticSwatches, typeScale, spaceScale, radiusScale, pasteBlock,
+    };
+  }
+}
+</script>
+</body>
+</html>

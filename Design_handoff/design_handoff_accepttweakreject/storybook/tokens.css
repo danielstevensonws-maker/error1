@@ -1,0 +1,83 @@
+:root,
+[data-qa-theme] {
+  --qa-accent: #C05B41;
+  --qa-accent-ink: #FBEEE6;
+  --qa-accent-soft: rgba(192, 91, 65, .22);
+  --qa-accent-line: rgba(192, 91, 65, .55);
+  --qa-accent-glow: rgba(192, 91, 65, .45);
+  --qa-danger: #C8453A;
+  --qa-danger-soft: rgba(200, 69, 58, .20);
+  --qa-success: #6F9463;
+  --qa-success-soft: rgba(111, 148, 99, .20);
+  --qa-gold: #C79A47;
+  --qa-gold-soft: rgba(199, 154, 71, .20);
+  --qa-map-hi: #2A2115;
+  --qa-map-mid: #1B1610;
+  --qa-map-lo: #12100A;
+  --qa-map-grid: rgba(230, 220, 196, .05);
+  --qa-font-display: 'IM Fell English', Georgia, serif;
+  --qa-font-body: 'EB Garamond', Georgia, serif;
+  --qa-font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --qa-tracking-caps: .16em;
+  --qa-text-whisper: 10px;
+  --qa-text-label: 12px;
+  --qa-text-body: 16px;
+  --qa-text-lg: 20px;
+  --qa-text-title: 28px;
+  --qa-text-display: 40px;
+  --qa-s1: 4px;  --qa-s2: 8px;  --qa-s3: 12px; --qa-s4: 16px;
+  --qa-s5: 24px; --qa-s6: 32px; --qa-s7: 48px; --qa-s8: 64px;
+  --qa-hud-inset: 24px;
+  --qa-radius-sm: 3px; --qa-radius: 6px; --qa-radius-lg: 10px; --qa-radius-round: 999px;
+  --qa-hairline: 1px;
+  --qa-dur-fast: 120ms; --qa-dur: 220ms; --qa-dur-slow: 420ms;
+  --qa-ease: cubic-bezier(.2, .7, .2, 1);
+  --qa-ease-out: cubic-bezier(.16, 1, .3, 1);
+  --qa-shadow: 0 18px 48px -18px rgba(0, 0, 0, .72), 0 2px 8px rgba(0, 0, 0, .35);
+  --qa-shadow-pop: 0 30px 70px -22px rgba(0, 0, 0, .8);
+}
+
+/* ghost — warm dark · the only theme the card ships with */
+[data-qa-theme="ghost"] {
+  --qa-glass: rgba(19, 16, 9, .55);
+  --qa-glass-solid: rgba(28, 24, 15, .94);
+  --qa-glass-border: rgba(230, 220, 196, .14);
+  --qa-glass-blur: 14px;
+  --qa-chip: rgba(230, 220, 196, .08);
+  --qa-scrim: rgba(10, 8, 4, .55);
+  --qa-ink: #E6DCC4;
+  --qa-ink-dim: rgba(230, 220, 196, .62);
+  --qa-ink-faint: rgba(230, 220, 196, .34);
+}
+[data-qa-theme="slate"] {
+  --qa-glass: rgba(17, 21, 29, .68);
+  --qa-glass-solid: rgba(22, 27, 37, .95);
+  --qa-glass-border: rgba(233, 237, 244, .15);
+  --qa-glass-blur: 20px;
+  --qa-chip: rgba(233, 237, 244, .08);
+  --qa-scrim: rgba(6, 9, 14, .6);
+  --qa-ink: #E9EDF4;
+  --qa-ink-dim: rgba(233, 237, 244, .6);
+  --qa-ink-faint: rgba(233, 237, 244, .32);
+}
+[data-qa-theme="ivory"] {
+  --qa-glass: rgba(243, 240, 233, .6);
+  --qa-glass-solid: rgba(247, 244, 237, .96);
+  --qa-glass-border: rgba(32, 29, 24, .16);
+  --qa-glass-blur: 16px;
+  --qa-chip: rgba(32, 29, 24, .06);
+  --qa-scrim: rgba(32, 29, 24, .4);
+  --qa-ink: #201D18;
+  --qa-ink-dim: rgba(32, 29, 24, .62);
+  --qa-ink-faint: rgba(32, 29, 24, .36);
+}
+
+/* card entrance + streaming caret */
+@keyframes qa-card-in { from { transform: translateY(8px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+@keyframes qa-blink { 0%, 49% { opacity: 1 } 50%, 100% { opacity: 0 } }
+
+@media (prefers-reduced-motion: reduce) {
+  .qa-atr-card, .qa-atr-card * { animation: none !important; transition: none !important; }
+}
+[data-qa-rm="on"] .qa-atr-card,
+[data-qa-rm="on"] .qa-atr-card * { animation: none !important; transition: none !important; }

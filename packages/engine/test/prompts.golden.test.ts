@@ -8,7 +8,7 @@
  *    #5 timeout + DM-answers-for-player closures on every kind.
  */
 import { describe, it, expect } from 'vitest';
-import { PromptContextSchema, EventBodySchema } from '@questra/contracts';
+import { PromptContextSchema, EventBodySchema, type PromptContext } from '@questra/contracts';
 import {
   promptedEvent, takenEvent, declinedEvent, activePromptFor, opportunityPrompts,
   spendReaction, resetReactionsOnTurn, type ReactionState,
@@ -165,7 +165,7 @@ describe('Brief 08 §4 #5 — timeout and DM-answers-for-anyone produce valid cl
     { kind: 'legendary_action', poolRemaining: 2, options: [{ name: 'Tail Attack', cost: 1 }] },
     { kind: 'legendary_resistance', save: { ability: 'wis', dc: 18 }, usesLeft: 1 },
     { kind: 'lair', options: [] },
-  ] as const;
+  ] satisfies PromptContext[];
 
   it('a timeout ⇒ a valid reaction_declined{reason:timeout} for every prompt kind', () => {
     for (const context of contexts) {
@@ -181,10 +181,17 @@ describe('Brief 08 §4 #5 — timeout and DM-answers-for-anyone produce valid cl
   });
 
   it('one modal prompt at a time per viewer; the rest queue (§1)', () => {
+    /* This test is about QUEUEING, not about kinds, so one real context is
+       reused for all three. Named rather than indexed out of the table above:
+       noUncheckedIndexedAccess types `contexts[1]` as possibly undefined, and a
+       prompt with no context is not one the system can hold. */
+    const context: PromptContext = {
+      kind: 'feature', featureId: 'feature.shield', trigger: 'targeted_by_attack',
+    };
     const pending = [
-      { promptId: 'a', holderId: 'pc-1', timeoutSec: 60, context: contexts[1] },
-      { promptId: 'b', holderId: 'pc-1', timeoutSec: 60, context: contexts[1] },
-      { promptId: 'c', holderId: 'pc-2', timeoutSec: 60, context: contexts[1] },
+      { promptId: 'a', holderId: 'pc-1', timeoutSec: 60, context },
+      { promptId: 'b', holderId: 'pc-1', timeoutSec: 60, context },
+      { promptId: 'c', holderId: 'pc-2', timeoutSec: 60, context },
     ];
     const { active, queued } = activePromptFor('pc-1', pending);
     expect(active!.promptId).toBe('a');

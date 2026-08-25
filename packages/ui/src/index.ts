@@ -1,15 +1,12 @@
 /**
- * @questra/ui — the primitive component library.
+ * @questra/ui — the shared look-and-feel layer.
  *
- * The `core` (Button, Chip, Label, Panel) and `hud` (HPBar, StatBlock, Avatar,
- * MapToken, AbilityCard, MenuItem, ReactionButton) pieces from the Questra
- * design system, implemented in TypeScript against the --qa-* tokens shipped by
- * @questra/theme. Each component's prop interface is the authoritative contract
- * from the design system's .d.ts; behaviour matches the reference .jsx.
+ * These are the repeats: the surfaces, tags, buttons, and labels every
+ * primitive composes rather than reinventing. Everything here is themed only
+ * via @questra/theme's --qa-* tokens (ADR-0014), so the whole app re-themes
+ * from one file with no component edits.
  *
- * These read design tokens via CSS custom properties, so a consuming app must
- * load the theme once (e.g. `@import "@questra/theme/styles.css"`) for them to
- * render on the palette.
+ * This package holds NO game logic and imports no contracts — it is look only.
  */
 export * from './core/index.js';
 export * from './hud/index.js';

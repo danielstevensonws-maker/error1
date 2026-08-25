@@ -57,6 +57,12 @@ export function checkIntent(
     resourceRemaining?: number;
     /** whether the attack/cast target is within reach/range (caller computes geometry). */
     targetInRange?: boolean;
+    /**
+     * Unspent slots by spell level, when the caller knows them. Absent means the
+     * check is skipped rather than guessed — same rule as `resourceRemaining`.
+     * Cantrips (slotLevel 0) never consult this.
+     */
+    slotsRemaining?: Record<number, number>;
   } = {},
 ): Legality {
   const actor = actorOf(intent, state);
@@ -94,6 +100,13 @@ export function checkIntent(
       if (opts.targetInRange === false) {
         return { legal: false, reason: `That target is out of range.` };
       }
+      // Cantrips are level 0 and spend nothing, so they can never run out.
+      if (intent.slotLevel > 0 && opts.slotsRemaining !== undefined) {
+        const remaining = opts.slotsRemaining[intent.slotLevel] ?? 0;
+        if (remaining <= 0) {
+          return { legal: false, reason: `No level ${intent.slotLevel} slots left — take a rest to get them back.` };
+        }
+      }
       return LEGAL;
     }
     case 'use_feature': {
@@ -103,6 +116,62 @@ export function checkIntent(
       return LEGAL;
     }
     case 'move':
+      return LEGAL;
+
+    /**
+     * The table controls and the two conversation intents never grey.
+     *
+     * Greying answers "would the rules allow this?", and none of these are
+     * rules questions: starting a fight, ending one, and passing the turn are
+     * the DM's to make, and whether SOMEBODY MAY send one is authorisation,
+     * decided server-side by role. Answering it here too would give the
+     * question two answers free to disagree — and the client's copy is the one
+     * an attacker skips. Whispering and answering a prompt are likewise always
+     * legal to attempt.
+     */
+    case 'start_combat':
+    case 'end_combat':
+    case 'advance_turn':
+    case 'whisper':
+    case 'prompt_reply':
+      return LEGAL;
+
+    /**
+     * A rest is a fiction decision the DM makes, not a rules gate — the engine
+     * decides what a rest RESTORES (canLongRest holds the 16-hour rule), which
+     * is a different question from whether the button is pressable.
+     */
+    case 'rest':
+      return LEGAL;
+
+    /**
+     * You roll death saves because you are dying, and the greying layer is not
+     * where that is decided: the near edge flips to the ladder only when the
+     * character is down, so the button does not exist to be greyed. The server
+     * still refuses one from somebody on their feet.
+     */
+    case 'death_save':
+      return LEGAL;
+
+    /**
+     * Asking for a check, answering one, ruling on a description, and putting
+     * a creature on the board never grey.
+     *
+     * A check is not a rules gate — it is the DM asking a question, and the
+     * whole point of rolling is that you might fail. Rolling one you were
+     * asked for is likewise always allowed; a player who cannot roll when
+     * asked is a player who cannot play. Ruling and adding creatures are
+     * authorisation (the DM's), decided server-side by role, and answering
+     * them here too would give the question two answers free to disagree.
+     */
+    case 'ask_for_check':
+    case 'roll_check':
+    case 'rule_on':
+    case 'add_creature':
+    case 'remove_creature':
+    /* Speaking is never a rules question — a DM performing is authorisation
+       (theirs), decided server-side by role. */
+    case 'speak_as':
       return LEGAL;
   }
 }

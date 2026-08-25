@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  [data-qa-theme]{
+    --qa-accent:#C05B41; --qa-accent-ink:#FBEEE6;
+    --qa-accent-soft:rgba(192,91,65,.22); --qa-accent-line:rgba(192,91,65,.55); --qa-accent-glow:rgba(192,91,65,.45);
+    --qa-danger:#C8453A; --qa-danger-soft:rgba(200,69,58,.20);
+    --qa-success:#6F9463; --qa-success-soft:rgba(111,148,99,.20);
+    --qa-gold:#C79A47; --qa-gold-soft:rgba(199,154,71,.20);
+    --qa-map-hi:#2A2115; --qa-map-mid:#1B1610; --qa-map-lo:#12100A; --qa-map-grid:rgba(230,220,196,.05);
+    --qa-font-display:'IM Fell English', Georgia, serif;
+    --qa-font-body:'EB Garamond', Georgia, serif;
+    --qa-font-mono:'IBM Plex Mono', ui-monospace, monospace;
+    --qa-tracking-caps:.16em;
+    --qa-text-whisper:10px; --qa-text-label:12px; --qa-text-body:16px; --qa-text-lg:20px; --qa-text-title:28px; --qa-text-display:40px;
+    --qa-s1:4px; --qa-s2:8px; --qa-s3:12px; --qa-s4:16px; --qa-s5:24px; --qa-s6:32px; --qa-s7:48px; --qa-s8:64px; --qa-hud-inset:24px;
+    --qa-radius-sm:3px; --qa-radius:6px; --qa-radius-lg:10px; --qa-radius-round:999px; --qa-hairline:1px;
+    --qa-dur-fast:120ms; --qa-dur:220ms; --qa-dur-slow:420ms;
+    --qa-ease:cubic-bezier(.2,.7,.2,1); --qa-ease-out:cubic-bezier(.16,1,.3,1);
+    --qa-shadow:0 18px 48px -18px rgba(0,0,0,.72), 0 2px 8px rgba(0,0,0,.35);
+    --qa-shadow-pop:0 30px 70px -22px rgba(0,0,0,.8);
+  }
+  [data-qa-theme="ghost"]{
+    --qa-glass:rgba(19,16,9,.55); --qa-glass-solid:rgba(28,24,15,.94);
+    --qa-glass-border:rgba(230,220,196,.14); --qa-glass-blur:14px;
+    --qa-chip:rgba(230,220,196,.08); --qa-scrim:rgba(10,8,4,.55);
+    --qa-ink:#E6DCC4; --qa-ink-dim:rgba(230,220,196,.62); --qa-ink-faint:rgba(230,220,196,.34);
+  }
+  [data-qa-theme="slate"]{
+    --qa-glass:rgba(17,21,29,.68); --qa-glass-solid:rgba(22,27,37,.95);
+    --qa-glass-border:rgba(233,237,244,.15); --qa-glass-blur:20px;
+    --qa-chip:rgba(233,237,244,.08); --qa-scrim:rgba(6,9,14,.6);
+    --qa-ink:#E9EDF4; --qa-ink-dim:rgba(233,237,244,.6); --qa-ink-faint:rgba(233,237,244,.32);
+  }
+  [data-qa-theme="ivory"]{
+    --qa-glass:rgba(243,240,233,.6); --qa-glass-solid:rgba(247,244,237,.96);
+    --qa-glass-border:rgba(32,29,24,.16); --qa-glass-blur:16px;
+    --qa-chip:rgba(32,29,24,.06); --qa-scrim:rgba(32,29,24,.4);
+    --qa-ink:#201D18; --qa-ink-dim:rgba(32,29,24,.62); --qa-ink-faint:rgba(32,29,24,.36);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:#12100A}
+  a{color:var(--qa-accent);text-decoration:none}
+  a:hover{color:var(--qa-accent-line)}
+  @keyframes qa-card-in{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
+  @keyframes qa-blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+  [data-qa-rm="on"] *{animation:none !important;transition:none !important}
+</style>
+</helmet>
+
+<div data-qa-theme="{{ theme }}" data-qa-rm="{{ rm }}" style="position:relative;min-height:760px;overflow:hidden;font-family:var(--qa-font-body);color:var(--qa-ink);background:radial-gradient(120% 90% at 56% 30%, var(--qa-map-hi) 0%, var(--qa-map-mid) 44%, var(--qa-map-lo) 100%)">
+
+  <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(var(--qa-map-grid) 1px, transparent 1px);background-size:88px 88px;opacity:.7"></div>
+  <div style="position:absolute;inset:0;pointer-events:none;background:radial-gradient(130% 100% at 56% 28%, transparent 44%, rgba(0,0,0,.55) 100%)"></div>
+
+  <!-- ===== harness ===== -->
+  <div style="position:absolute;top:var(--qa-hud-inset);left:var(--qa-hud-inset);z-index:5;width:200px;background:var(--qa-glass);border:var(--qa-hairline) solid var(--qa-glass-border);border-radius:var(--qa-radius-lg);backdrop-filter:blur(var(--qa-glass-blur));-webkit-backdrop-filter:blur(var(--qa-glass-blur));box-shadow:var(--qa-shadow);padding:var(--qa-s4)">
+    <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);letter-spacing:var(--qa-tracking-caps);text-transform:uppercase;color:var(--qa-ink-faint);margin-bottom:var(--qa-s3)">Harness · state</div>
+    <div style="display:flex;flex-direction:column;gap:var(--qa-s1)">
+      <sc-for list="{{ views }}" as="v" hint-placeholder-count="5">
+        <button onClick="{{ v.pick }}" style="{{ v.style }}">{{ v.name }}</button>
+      </sc-for>
+    </div>
+    <div style="height:var(--qa-hairline);background:var(--qa-glass-border);margin:var(--qa-s3) 0"></div>
+    <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);letter-spacing:var(--qa-tracking-caps);text-transform:uppercase;color:var(--qa-ink-faint);margin-bottom:var(--qa-s2)">Draft kind</div>
+    <div style="display:flex;gap:var(--qa-s1)">
+      <button onClick="{{ setText }}" style="{{ textBtn }}">text</button>
+      <button onClick="{{ setStructured }}" style="{{ structuredBtn }}">structured</button>
+    </div>
+    <div style="font-family:var(--qa-font-body);font-size:var(--qa-text-whisper);color:var(--qa-ink-faint);line-height:1.4;margin-top:var(--qa-s2)">Tweak is hidden for structured drafts.</div>
+  </div>
+
+  <!-- ===== the card ===== -->
+  <div style="position:relative;z-index:2;min-height:760px;display:flex;align-items:center;justify-content:center;padding:var(--qa-s7) var(--qa-s7) var(--qa-s7) 240px">
+    <section role="region" aria-label="{{ ariaLabel }}" aria-busy="{{ busy }}" style="width:560px;max-width:100%;background:var(--qa-glass);border:var(--qa-hairline) solid var(--qa-glass-border);border-radius:var(--qa-radius-lg);backdrop-filter:blur(var(--qa-glass-blur));-webkit-backdrop-filter:blur(var(--qa-glass-blur));box-shadow:var(--qa-shadow-pop);overflow:hidden;animation:qa-card-in var(--qa-dur) var(--qa-ease-out)">
+
+      <!-- header -->
+      <header style="display:flex;justify-content:space-between;align-items:center;gap:var(--qa-s3);padding:var(--qa-s5) var(--qa-s5) var(--qa-s3)">
+        <div style="display:flex;align-items:center;gap:var(--qa-s2)">
+          <span title="An assistant wrote this" style="width:6px;height:6px;border-radius:var(--qa-radius-round);background:var(--qa-accent);box-shadow:0 0 8px var(--qa-accent-glow);flex:none"></span>
+          <span style="font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);letter-spacing:var(--qa-tracking-caps);text-transform:uppercase;color:var(--qa-ink-dim)">{{ eyebrow }}</span>
+        </div>
+        <span style="font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);letter-spacing:var(--qa-tracking-caps);text-transform:uppercase;color:var(--qa-ink-faint)">{{ source }}</span>
+      </header>
+
+      <!-- body -->
+      <div style="padding:0 var(--qa-s5) var(--qa-s5)">
+
+        <!-- draft · text -->
+        <sc-if value="{{ isDraftText }}" hint-placeholder-val="{{ true }}">
+          <p style="font-family:var(--qa-font-body);font-size:var(--qa-text-body);line-height:1.6;color:var(--qa-ink);margin:0;white-space:pre-line;text-wrap:pretty">{{ draftText }}</p>
+        </sc-if>
+
+        <!-- draft · structured (the ruling rows) -->
+        <sc-if value="{{ isDraftStructured }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column">
+            <sc-for list="{{ structuredRows }}" as="row" hint-placeholder-count="3">
+              <div style="{{ row.wrap }}">
+                <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);letter-spacing:var(--qa-tracking-caps);text-transform:uppercase;color:var(--qa-ink-dim);width:96px;flex:none;padding-top:3px">{{ row.label }}</div>
+                <div style="{{ row.valStyle }}">{{ row.value }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <!-- streaming -->
+        <sc-if value="{{ isStreaming }}" hint-placeholder-val="{{ true }}">
+          <p style="font-family:var(--qa-font-body);font-size:var(--qa-text-body);line-height:1.6;color:var(--qa-ink);margin:0;white-space:pre-line">{{ streamText }}<span style="display:inline-block;width:2px;height:1.05em;vertical-align:-2px;margin-left:2px;background:var(--qa-accent);animation:qa-blink 1s steps(1) infinite"></span></p>
+        </sc-if>
+
+        <!-- tweak -->
+        <sc-if value="{{ isTweak }}" hint-placeholder-val="{{ true }}">
+          <textarea ref="{{ taRef }}" value="{{ tweakText }}" onChange="{{ onTweakInput }}" aria-label="Edit the suggestion" style="width:100%;min-height:148px;resize:vertical;background:var(--qa-glass-solid);border:var(--qa-hairline) solid var(--qa-accent-line);border-radius:var(--qa-radius);padding:var(--qa-s3);font-family:var(--qa-font-body);font-size:var(--qa-text-body);line-height:1.55;color:var(--qa-ink);outline:none;box-shadow:0 0 0 3px var(--qa-accent-soft)"></textarea>
+        </sc-if>
+
+        <!-- fallback -->
+        <sc-if value="{{ isFallback }}" hint-placeholder-val="{{ true }}">
+          <p style="font-family:var(--qa-font-body);font-size:var(--qa-text-body);line-height:1.55;color:var(--qa-ink-dim);margin:0 0 var(--qa-s4);text-wrap:pretty">The assistant couldn’t reach a ruling. Set the difficulty yourself:</p>
+          <div style="display:flex;gap:var(--qa-s2)">
+            <sc-for list="{{ ladder }}" as="d" hint-placeholder-count="3">
+              <div style="{{ d.style }}">
+                <div style="font-family:var(--qa-font-body);font-size:var(--qa-text-label);color:var(--qa-ink-dim)">{{ d.name }}</div>
+                <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-lg);color:var(--qa-ink);line-height:1.1;margin-top:2px">{{ d.dc }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <!-- resolved -->
+        <sc-if value="{{ isResolved }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;align-items:center;gap:var(--qa-s3)">
+            <span style="width:8px;height:8px;border-radius:var(--qa-radius-round);background:{{ outcomeColor }};flex:none"></span>
+            <span style="font-family:var(--qa-font-body);font-size:var(--qa-text-body);color:var(--qa-ink-dim)">{{ outcomeText }}</span>
+            <button onClick="{{ reset }}" style="margin-left:auto;background:transparent;border:none;cursor:pointer;font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);letter-spacing:var(--qa-tracking-caps);text-transform:uppercase;color:var(--qa-ink-faint);transition:color var(--qa-dur) var(--qa-ease)" style-hover="color:var(--qa-ink)">Undo</button>
+          </div>
+        </sc-if>
+
+      </div>
+
+      <!-- footer -->
+      <sc-if value="{{ showFooter }}" hint-placeholder-val="{{ true }}">
+        <footer style="display:flex;align-items:center;gap:var(--qa-s2);padding:var(--qa-s4) var(--qa-s5);background:var(--qa-glass-solid);border-top:var(--qa-hairline) solid var(--qa-glass-border)">
+
+          <!-- draft / fallback footer: primary + optional tweak, spacer, reject -->
+          <sc-if value="{{ isDecision }}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{ accept }}" style="height:40px;padding:0 var(--qa-s5);display:grid;place-items:center;background:var(--qa-accent);color:var(--qa-accent-ink);border:none;border-radius:var(--qa-radius);font-family:var(--qa-font-body);font-size:var(--qa-text-body);font-weight:500;cursor:pointer;transition:box-shadow var(--qa-dur) var(--qa-ease),transform var(--qa-dur-fast) var(--qa-ease)" style-hover="box-shadow:0 8px 24px -8px var(--qa-accent-glow)" style-active="transform:translateY(1px)">{{ acceptLabel }}</button>
+            <sc-if value="{{ showTweak }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ tweak }}" style="height:40px;padding:0 var(--qa-s4);display:grid;place-items:center;background:transparent;color:var(--qa-ink);border:var(--qa-hairline) solid var(--qa-glass-border);border-radius:var(--qa-radius);font-family:var(--qa-font-body);font-size:var(--qa-text-body);font-weight:500;cursor:pointer;transition:border-color var(--qa-dur) var(--qa-ease)" style-hover="border-color:var(--qa-ink-faint)">Tweak</button>
+            </sc-if>
+            <div style="flex:1;min-width:var(--qa-s6)"></div>
+            <button onClick="{{ reject }}" style="height:40px;padding:0 var(--qa-s4);display:grid;place-items:center;background:transparent;color:var(--qa-ink-dim);border:var(--qa-hairline) solid transparent;border-radius:var(--qa-radius);font-family:var(--qa-font-body);font-size:var(--qa-text-body);font-weight:500;cursor:pointer;transition:all var(--qa-dur) var(--qa-ease)" style-hover="color:var(--qa-danger);background:var(--qa-danger-soft)">{{ rejectLabel }}</button>
+          </sc-if>
+
+          <!-- tweak footer: save / cancel -->
+          <sc-if value="{{ isTweak }}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{ saveTweak }}" style="height:40px;padding:0 var(--qa-s5);display:grid;place-items:center;background:var(--qa-accent);color:var(--qa-accent-ink);border:none;border-radius:var(--qa-radius);font-family:var(--qa-font-body);font-size:var(--qa-text-body);font-weight:500;cursor:pointer;transition:box-shadow var(--qa-dur) var(--qa-ease),transform var(--qa-dur-fast) var(--qa-ease)" style-hover="box-shadow:0 8px 24px -8px var(--qa-accent-glow)" style-active="transform:translateY(1px)">Save changes</button>
+            <button onClick="{{ cancelTweak }}" style="height:40px;padding:0 var(--qa-s4);display:grid;place-items:center;background:transparent;color:var(--qa-ink-dim);border:var(--qa-hairline) solid var(--qa-glass-border);border-radius:var(--qa-radius);font-family:var(--qa-font-body);font-size:var(--qa-text-body);font-weight:500;cursor:pointer;transition:border-color var(--qa-dur) var(--qa-ease)" style-hover="border-color:var(--qa-ink-faint)">Cancel</button>
+          </sc-if>
+
+        </footer>
+      </sc-if>
+
+    </section>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1080,&quot;height&quot;:760},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ghost&quot;,&quot;slate&quot;,&quot;ivory&quot;],&quot;default&quot;:&quot;ghost&quot;,&quot;tsType&quot;:&quot;'ghost'|'slate'|'ivory'&quot;,&quot;section&quot;:&quot;Theme&quot;},&quot;reduceMotion&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Theme&quot;}}">
+class Component extends DCLogic {
+  taRef = React.createRef();
+  DRAFT = "The rope bridge lurches as you step onto it — a plank splits underfoot.\n\nMake a Dexterity (Acrobatics) check to keep your footing as the slats give way beneath you.";
+  STREAM = "The rope bridge lurches as you step onto it — a plank splits under";
+  state = { view:'draft', kind:'text', outcome:null, tweakText:this.DRAFT };
+
+  componentDidUpdate(_p, prev){
+    if (this.state.view === 'tweak' && prev.view !== 'tweak' && this.taRef.current){
+      const el = this.taRef.current; el.focus(); el.setSelectionRange(el.value.length, el.value.length);
+    }
+  }
+
+  go(view){
+    const st = { view };
+    if (view === 'tweak') st.tweakText = this.DRAFT;
+    if (view === 'resolved') st.outcome = 'accepted';
+    this.setState(st);
+  }
+  resolve(outcome){ this.setState({ view:'resolved', outcome }); }
+
+  renderVals(){
+    const s = this.state;
+    const structured = s.kind === 'structured';
+    const v = s.view;
+
+    const viewDefs = [
+      { key:'draft', name:'Draft' },
+      { key:'tweak', name:'Tweak mode' },
+      { key:'streaming', name:'Streaming' },
+      { key:'fallback', name:'Fallback' },
+      { key:'resolved', name:'Resolved' },
+    ];
+    const vBtn = (on) => 'width:100%;padding:var(--qa-s2) var(--qa-s3);border-radius:var(--qa-radius);cursor:pointer;font-family:var(--qa-font-body);font-size:var(--qa-text-label);text-align:left;transition:all var(--qa-dur) var(--qa-ease);border:var(--qa-hairline) solid '
+      + (on ? 'var(--qa-accent-line);background:var(--qa-accent-soft);color:var(--qa-ink);' : 'transparent;background:var(--qa-chip);color:var(--qa-ink-dim);');
+    const views = viewDefs.map(d => ({ name:d.name, style:vBtn(v === d.key), pick:() => this.go(d.key) }));
+
+    const kindBtn = (on) => 'flex:1;padding:var(--qa-s2) 0;border-radius:var(--qa-radius);cursor:pointer;font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);letter-spacing:.08em;text-transform:uppercase;transition:all var(--qa-dur) var(--qa-ease);border:var(--qa-hairline) solid '
+      + (on ? 'var(--qa-accent-line);background:var(--qa-accent-soft);color:var(--qa-ink);' : 'var(--qa-glass-border);background:transparent;color:var(--qa-ink-dim);');
+
+    // structured ruling rows
+    const rowWrap = (first) => 'display:flex;gap:var(--qa-s4);padding:var(--qa-s3) 0;' + (first ? '' : 'border-top:var(--qa-hairline) solid var(--qa-glass-border);');
+    const structuredRows = [
+      { label:'Check', value:'Dexterity (Acrobatics)', wrap:rowWrap(true), valStyle:'font-family:var(--qa-font-body);font-size:var(--qa-text-body);color:var(--qa-ink);line-height:1.4' },
+      { label:'DC', value:'14', wrap:rowWrap(false), valStyle:'font-family:var(--qa-font-mono);font-size:var(--qa-text-lg);color:var(--qa-ink);line-height:1.2' },
+      { label:'On a fail', value:'You slip; you’re knocked prone at the bridge’s edge.', wrap:rowWrap(false), valStyle:'font-family:var(--qa-font-body);font-style:italic;font-size:var(--qa-text-body);color:var(--qa-ink-dim);line-height:1.45' },
+    ];
+
+    const ladder = [
+      { name:'Easy', dc:'10', style:'flex:1;text-align:center;padding:var(--qa-s3);background:var(--qa-chip);border:var(--qa-hairline) solid var(--qa-glass-border);border-radius:var(--qa-radius)' },
+      { name:'Medium', dc:'14', style:'flex:1;text-align:center;padding:var(--qa-s3);background:var(--qa-accent-soft);border:var(--qa-hairline) solid var(--qa-accent-line);border-radius:var(--qa-radius)' },
+      { name:'Hard', dc:'18', style:'flex:1;text-align:center;padding:var(--qa-s3);background:var(--qa-chip);border:var(--qa-hairline) solid var(--qa-glass-border);border-radius:var(--qa-radius)' },
+    ];
+
+    const outcomeMap = {
+      accepted:{ text:'Accepted — applied to the scene.', color:'var(--qa-success)' },
+      tweaked:{ text:'Saved your changes — applied to the scene.', color:'var(--qa-success)' },
+      rejected:{ text:'Rejected — nothing was applied.', color:'var(--qa-ink-faint)' },
+    };
+    const oc = outcomeMap[s.outcome] || outcomeMap.accepted;
+
+    const isDecision = v === 'draft' || v === 'fallback';
+    const showTweak = v === 'draft' && !structured; // Tweak only for editable text drafts
+
+    return {
+      theme:this.props.theme ?? 'ghost',
+      rm:(this.props.reduceMotion ? 'on' : 'off'),
+      views, textBtn:kindBtn(!structured), structuredBtn:kindBtn(structured),
+      setText:() => this.setState({ kind:'text' }), setStructured:() => this.setState({ kind:'structured' }),
+
+      eyebrow: v === 'fallback' ? 'Fallback' : 'Suggestion',
+      source: structured ? 'DM Ruling' : 'DM Narration',
+      ariaLabel: (v === 'fallback' ? 'Fallback' : 'Suggestion') + ' — ' + (structured ? 'DM ruling' : 'narration'),
+      busy: v === 'streaming' ? 'true' : 'false',
+
+      isDraftText: v === 'draft' && !structured,
+      isDraftStructured: v === 'draft' && structured,
+      isStreaming: v === 'streaming',
+      isTweak: v === 'tweak',
+      isFallback: v === 'fallback',
+      isResolved: v === 'resolved',
+
+      draftText:this.DRAFT, streamText:this.STREAM, structuredRows, ladder,
+      tweakText:s.tweakText, taRef:this.taRef,
+      onTweakInput:(e) => this.setState({ tweakText:e.target.value }),
+
+      showFooter: v === 'draft' || v === 'fallback' || v === 'tweak', // hidden in streaming & resolved
+      isDecision, showTweak,
+      acceptLabel: v === 'fallback' ? 'Use Medium (14)' : 'Accept',
+      rejectLabel: v === 'fallback' ? 'Dismiss' : 'Reject',
+
+      accept:() => this.resolve('accepted'),
+      reject:() => this.resolve('rejected'),
+      tweak:() => this.go('tweak'),
+      saveTweak:() => this.resolve('tweaked'),
+      cancelTweak:() => this.go('draft'),
+      reset:() => this.go('draft'),
+      outcomeText:oc.text, outcomeColor:oc.color,
+    };
+  }
+}
+</script>
+</body>
+</html>

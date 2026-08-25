@@ -1,6 +1,6 @@
 /**
  * The SRD spell dataset. The verified core is the canonical Fireball fixture
- * (surfaced via slice.ts); the remaining ~311 spells are ingested to qa:draft —
+ * (surfaced via slice.ts); the remaining ~338 spells are ingested to qa:draft —
  * their structured meta + verbatim text validate against the contracts schema,
  * but their `plain` sentence and `effects[]` await the rules-lawyer pass, so the
  * loader keeps them out of real sessions (dev only) until verified.
@@ -17,7 +17,7 @@ import draftRecords from './spells.draft.json' with { type: 'json' };
 /** Ids already present as verified entities — excluded from the draft set to avoid duplicates. */
 const VERIFIED_SPELL_IDS = new Set<string>([FIREBALL.id]);
 
-/** The ~311 draft spells (everything ingested except the verified core), validated against the schema. */
+/** The ~338 draft spells (everything ingested except the verified core), validated against the schema. */
 export const DRAFT_SPELLS: RulesEntity[] = (draftRecords as unknown[])
   .map((r) => RulesEntitySchema.parse(r))
   .filter((s) => !VERIFIED_SPELL_IDS.has(s.id));

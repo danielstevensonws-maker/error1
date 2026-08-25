@@ -29,6 +29,13 @@ export const CharacterChoicesSchema = z.object({
   skillChoices: z.array(SkillSchema),
   languageChoices: z.array(z.string()),
   equipment: z.array(ID),
+  /**
+   * The spells the character picked. Optional because most classes cast nothing
+   * — but without them the engine has no way to know what a caster prepared,
+   * which is why a computed sheet used to come back with an empty spell list.
+   */
+  cantripChoices: z.array(ID).optional(),
+  preparedSpellIds: z.array(ID).optional(),
   featChoices: z.record(z.string(), ID), // slot id → feat id
   identity: z.object({
     name: z.string(),
@@ -76,12 +83,52 @@ export type FeatureCard = z.infer<typeof FeatureCardSchema>;
 
 const HpSchema = z.object({ max: z.number().int(), hitDie: z.string(), hitDiceMax: z.number().int() });
 
+/**
+ * A castable spell, resolved against the rules data — the spell half of
+ * AttackCard. Carries data, never presentation: `rangeFt` not "60 feet",
+ * `castingTime` not "Action". The play surface maps these to its own view model.
+ *
+ * `save`, `attack` and `damage` are optional because they are read off the
+ * spell's `effects[]`, and a spell that hasn't had its rules-lawyer pass may not
+ * have them yet. Absent means "not known from the data", never "none".
+ */
+export const SpellCardSchema = z.object({
+  id: ID,
+  name: z.string(),
+  /** 0 = cantrip: always available, spends no slot. */
+  level: z.number().int().min(0).max(9),
+  school: z.string(),
+  castingTime: z.string(),
+  rangeFt: z.union([z.number().int().nonnegative(), z.string()]),
+  concentration: z.boolean(),
+  ritual: z.boolean(),
+  /** info-layer 1: the one-sentence plain reading, carried from the entity. */
+  plain: z.string(),
+  /** a spell the target resists rather than one you roll to hit with. */
+  save: z.object({ ability: AbilitySchema, dc: z.number().int() }).optional(),
+  /** a spell you roll an attack for. */
+  attack: DerivedSchema(z.number().int()).optional(),
+  damage: z.object({ dice: RulesExprSchema, type: z.string() }).optional(),
+});
+export type SpellCard = z.infer<typeof SpellCardSchema>;
+
 const SpellcastingSchema = z.object({
   ability: AbilitySchema,
   saveDc: DerivedSchema(z.number().int()),
   attackBonus: DerivedSchema(z.number().int()),
+  /**
+   * How the slots behave. 'slots' is the standard ladder (Long Rest); 'pact' is
+   * the Warlock's — every slot at one level, back on a Short Rest.
+   */
+  slotKind: z.enum(['slots', 'pact']).default('slots'),
+  /** spell level (as a string key) → number of slots at that level. */
   slots: z.record(z.string(), z.number().int()),
-  prepared: z.array(ID),
+  /** how many level-1+ spells this character may have prepared at this level. */
+  preparedMax: z.number().int().nonnegative(),
+  /** the level-1+ spells actually prepared, resolved against the rules data. */
+  prepared: z.array(SpellCardSchema),
+  /** cantrips known — always available, never spend a slot. */
+  cantrips: z.array(SpellCardSchema),
 });
 
 export const ComputedSheetSchema = z.object({

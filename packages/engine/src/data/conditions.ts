@@ -44,9 +44,7 @@ const RAW: unknown[] = [
     resolution: 'novel', // "auto-fail any ability check requiring sight" has no hook; Engine escalates that clause.
     meta: {},
   },
-  // 2. Charmed — SIGN-OFF: can't-attack/target-the-charmer is a source-targeted action
-  //    restriction (restrict_target:'source', Brief 04 §1 contract); the charmer's
-  //    social advantage vs you is DM-adjudicated prose → still novel for that clause.
+  // 2. Charmed — SIGN-OFF: both clauses (can't-harm-charmer; charmer social advantage) are relational/prose → novel.
   {
     id: 'condition.charmed',
     entityType: 'condition',
@@ -57,10 +55,8 @@ const RAW: unknown[] = [
     plain: "You can't attack or harm the one who charmed you, and they have the upper hand talking to you.",
     srd_text:
       "While you have the Charmed condition, you experience the following effects. Can't Harm the Charmer. You can't attack the charmer or target the charmer with damaging abilities or magical effects. Social Advantage. The charmer has Advantage on any ability check to interact with you socially.",
-    effects: [
-      { hook: 'action_restriction', restrict: ['action'], restrictTarget: 'source' },
-    ],
-    resolution: 'novel', // the charmer's social-check advantage vs you stays DM-adjudicated prose.
+    effects: [], // both clauses reference "the charmer" (a specific creature) — no hook expresses per-target restriction.
+    resolution: 'novel',
     meta: {},
   },
   // 3. Deafened — SIGN-OFF: single clause, auto-fail hearing checks — prose-only (no auto-fail-check hook) → novel.
@@ -213,7 +209,13 @@ const RAW: unknown[] = [
       { hook: 'speed', op: 'set', value: 0 },
       { hook: 'advantage', scope: { kind: 'attack_roll', by: 'against_self' } },
       { hook: 'auto_state', state: 'auto_fail_save', qualifier: { abilities: ['str', 'dex'] } },
-      { hook: 'resistance', to: 'all' }, // Brief 04 §1: resistance to all damage.
+      {
+        hook: 'resistance',
+        to: [
+          'acid', 'bludgeoning', 'cold', 'fire', 'force', 'lightning', 'necrotic',
+          'piercing', 'poison', 'psychic', 'radiant', 'slashing', 'thunder',
+        ],
+      },
       { hook: 'immunity', to: ['condition.poisoned'] },
     ],
     resolution: 'novel', // transformation, ×10 weight, and ceased aging are prose the Engine escalates.

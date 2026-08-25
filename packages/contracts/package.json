@@ -8,7 +8,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
-    "check": "npm run build && vitest run"
+    "check": "npm run build && tsc -p tsconfig.check.json && vitest run",
+    "typecheck": "tsc -p tsconfig.check.json"
   },
   "dependencies": { "zod": "^4.4.3" },
   "devDependencies": { "typescript": "^7.0.2", "vitest": "^4.0.0", "@types/node": "^24.0.0" }

@@ -1,122 +1,85 @@
+/**
+ * Render tests for the shared components.
+ *
+ * These assert behaviour that the design depends on — chiefly that a disabled
+ * control stays visible and explains itself (the greying rule), and that tones
+ * map to the right token rather than a literal.
+ */
 import { describe, it, expect, afterEach } from 'vitest';
-import { render, screen, cleanup, fireEvent } from '@testing-library/react';
-import { Button, Chip, Label, Panel } from '../src/core/index.js';
+import { render, screen, cleanup } from '@testing-library/react';
+import { Panel, Chip, Button, Label } from '../src/index.js';
 
+// Each test mounts fresh; without this, a name like "Choose" used in two tests
+// matches twice and the query throws.
 afterEach(cleanup);
 
-describe('Button', () => {
-  it('renders children and fires onClick when enabled', () => {
-    let clicked = 0;
-    render(<Button onClick={() => (clicked += 1)}>Start a game</Button>);
-    const btn = screen.getByText('Start a game');
-    fireEvent.click(btn);
-    expect(clicked).toBe(1);
+describe('Panel', () => {
+  it('renders its children', () => {
+    render(<Panel>vault door</Panel>);
+    expect(screen.getByText('vault door')).toBeDefined();
   });
 
-  it('does not fire onClick when disabled', () => {
-    let clicked = 0;
-    render(
-      <Button disabled onClick={() => (clicked += 1)}>
-        Nope
-      </Button>,
-    );
-    fireEvent.click(screen.getByText('Nope'));
-    expect(clicked).toBe(0);
+  it('reads glass tokens, not literals', () => {
+    const { container } = render(<Panel>x</Panel>);
+    const el = container.firstElementChild as HTMLElement;
+    expect(el.style.background).toContain('--qa-glass');
+    expect(el.style.borderRadius).toContain('--qa-radius');
   });
 
-  it.each(['primary', 'hex', 'secondary', 'ghost'] as const)('renders the %s variant', (variant) => {
-    render(<Button variant={variant}>Act</Button>);
-    expect(screen.getByText('Act')).toBeDefined();
-  });
-
-  it('primary carries the ember background (the one accent)', () => {
-    render(<Button variant="primary">Commit</Button>);
-    const btn = screen.getByText('Commit') as HTMLButtonElement;
-    expect(btn.style.background).toContain('var(--qa-ember)');
-  });
-
-  it('ghost uses the italic body font, not an ember fill', () => {
-    render(<Button variant="ghost">Open the Chronicle ›</Button>);
-    const btn = screen.getByText('Open the Chronicle ›') as HTMLButtonElement;
-    expect(btn.style.fontStyle).toBe('italic');
-    expect(btn.style.background).toBe('none');
+  it('solid tone swaps to the solid surface token', () => {
+    const { container } = render(<Panel tone="solid">x</Panel>);
+    const el = container.firstElementChild as HTMLElement;
+    expect(el.style.background).toContain('--qa-glass-solid');
   });
 });
 
 describe('Chip', () => {
-  it('defaults to the dim vellum tone', () => {
-    render(<Chip>CR ¼</Chip>);
-    const chip = screen.getByText('CR ¼');
-    expect(chip.style.color).toBe('var(--qa-vellum-dim)');
-    expect(chip.style.background).toBe('var(--qa-vellum-ghost)');
+  it('accent tone carries provenance, not warning', () => {
+    const { container } = render(<Chip tone="accent">Homebrew</Chip>);
+    const el = container.firstElementChild as HTMLElement;
+    expect(el.style.color).toContain('--qa-accent');
   });
 
-  it.each([
-    ['danger', 'var(--qa-danger)'],
-    ['heal', 'var(--qa-heal)'],
-    ['arcane', 'var(--qa-arcane)'],
-    ['steel', 'var(--qa-steel)'],
-    ['gold', 'var(--qa-gold)'],
-  ] as const)('tone %s maps to its semantic hue', (tone, hue) => {
-    render(<Chip tone={tone}>x</Chip>);
-    expect(screen.getByText('x').style.color).toBe(hue);
+  it('mono renders numbers in the mono face', () => {
+    const { container } = render(<Chip mono>18</Chip>);
+    const el = container.firstElementChild as HTMLElement;
+    expect(el.style.fontFamily).toContain('--qa-font-mono');
   });
+});
 
-  it('outline drops the fill for a hairline border', () => {
+describe('Button', () => {
+  it('a disabled button stays visible and dimmed — greying, never hiding', () => {
     render(
-      <Chip tone="accent" outline>
-        New entry
-      </Chip>,
+      <Button disabled title="It isn't your turn">
+        Attack
+      </Button>,
     );
-    const chip = screen.getByText('New entry');
-    expect(chip.style.background).toBe('transparent');
-    expect(chip.style.border).toContain('1px solid');
+    const btn = screen.getByRole('button', { name: 'Attack' });
+    expect(btn.hasAttribute('disabled')).toBe(true);
+    // Present in the tree and dimmed rather than removed.
+    expect(btn.style.opacity).toBe('0.5');
+    expect(btn.getAttribute('title')).toBe("It isn't your turn");
+  });
+
+  it('an enabled button is at full strength', () => {
+    render(<Button>Choose</Button>);
+    expect(screen.getByRole('button', { name: 'Choose' }).style.opacity).toBe('1');
+  });
+
+  it('primary uses the accent token', () => {
+    render(<Button variant="primary">Choose</Button>);
+    expect(screen.getByRole('button', { name: 'Choose' }).style.background).toContain('--qa-accent');
   });
 });
 
 describe('Label', () => {
-  it('is uppercase wide-tracked mono', () => {
-    render(<Label>Party · 4</Label>);
-    const el = screen.getByText('Party · 4');
-    expect(el.style.fontFamily).toBe('var(--qa-font-mono)');
-    expect(el.style.textTransform).toBe('uppercase');
-  });
-
-  it('accent tone is ember; explicit accent prop overrides', () => {
-    render(<Label tone="accent">Turn</Label>);
-    expect(screen.getByText('Turn').style.color).toBe('var(--qa-ember)');
-    cleanup();
-    render(<Label accent="var(--qa-danger)">Bloodied</Label>);
-    expect(screen.getByText('Bloodied').style.color).toBe('var(--qa-danger)');
-  });
-});
-
-describe('Panel', () => {
-  it('renders the mono label header and children', () => {
+  it('associates with a field when given htmlFor', () => {
     render(
-      <Panel label="WHAT ONLY YOU KNOW">
-        <span>secret</span>
-      </Panel>,
+      <>
+        <Label htmlFor="hp">Hit points</Label>
+        <input id="hp" defaultValue="12" />
+      </>,
     );
-    expect(screen.getByText('WHAT ONLY YOU KNOW')).toBeDefined();
-    expect(screen.getByText('secret')).toBeDefined();
-  });
-
-  it('collapsed hides children and toggles via the control', () => {
-    let toggled = 0;
-    render(
-      <Panel label="X" collapsible collapsed onToggle={() => (toggled += 1)}>
-        <span>body</span>
-      </Panel>,
-    );
-    expect(screen.queryByText('body')).toBeNull();
-    fireEvent.click(screen.getByTitle('Expand'));
-    expect(toggled).toBe(1);
-  });
-
-  it('raised uses the heavier glass fill', () => {
-    const { container } = render(<Panel raised>menu</Panel>);
-    const shell = container.firstElementChild as HTMLElement;
-    expect(shell.style.background).toBe('var(--qa-glass-raised)');
+    expect(screen.getByLabelText('Hit points')).toBeDefined();
   });
 });

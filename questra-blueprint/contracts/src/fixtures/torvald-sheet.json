@@ -1,0 +1,55 @@
+{
+  "abilities": {
+    "str": { "value": 16, "derivation": [{ "label": "Base", "value": 14 }, { "label": "Background", "value": 2 }] },
+    "dex": { "value": 13, "derivation": [{ "label": "Base", "value": 13 }] },
+    "con": { "value": 14, "derivation": [{ "label": "Base", "value": 13 }, { "label": "Background", "value": 1 }] },
+    "int": { "value": 8, "derivation": [{ "label": "Base", "value": 8 }] },
+    "wis": { "value": 12, "derivation": [{ "label": "Base", "value": 12 }] },
+    "cha": { "value": 10, "derivation": [{ "label": "Base", "value": 10 }] }
+  },
+  "profBonus": { "value": 2, "derivation": [{ "label": "Level 1", "value": 2 }] },
+  "hp": {
+    "value": { "max": 12, "hitDie": "d10", "hitDiceMax": 1 },
+    "derivation": [{ "label": "Hit die (max at level 1)", "value": 10 }, { "label": "CON", "value": 2 }]
+  },
+  "acOptions": [
+    { "value": 16, "derivation": [{ "label": "Chain Mail", "value": 16 }] },
+    { "value": 18, "derivation": [{ "label": "Chain Mail", "value": 16 }, { "label": "Shield", "value": 2 }] },
+    { "value": 11, "derivation": [{ "label": "Unarmored", "value": 10 }, { "label": "DEX", "value": 1 }] }
+  ],
+  "acDefault": 1,
+  "initiative": { "value": 1, "derivation": [{ "label": "DEX", "value": 1 }] },
+  "saves": {
+    "str": { "value": 5, "derivation": [{ "label": "STR", "value": 3 }, { "label": "Proficiency", "value": 2 }] },
+    "dex": { "value": 1, "derivation": [{ "label": "DEX", "value": 1 }] },
+    "con": { "value": 4, "derivation": [{ "label": "CON", "value": 2 }, { "label": "Proficiency", "value": 2 }] },
+    "int": { "value": -1, "derivation": [{ "label": "INT", "value": -1 }] },
+    "wis": { "value": 1, "derivation": [{ "label": "WIS", "value": 1 }] },
+    "cha": { "value": 0, "derivation": [{ "label": "CHA", "value": 0 }] }
+  },
+  "skills": {
+    "athletics": { "value": 5, "derivation": [{ "label": "STR", "value": 3 }, { "label": "Proficiency", "value": 2 }] },
+    "intimidation": { "value": 2, "derivation": [{ "label": "CHA", "value": 0 }, { "label": "Proficiency", "value": 2 }] }
+  },
+  "passives": {
+    "perception": { "value": 11, "derivation": [{ "label": "Base", "value": 10 }, { "label": "WIS", "value": 1 }] },
+    "investigation": { "value": 9, "derivation": [{ "label": "Base", "value": 10 }, { "label": "INT", "value": -1 }] },
+    "insight": { "value": 11, "derivation": [{ "label": "Base", "value": 10 }, { "label": "WIS", "value": 1 }] }
+  },
+  "speedFt": { "value": 30, "derivation": [{ "label": "Species", "value": 30 }] },
+  "attacks": [
+    {
+      "name": "Longsword",
+      "toHit": 5,
+      "toHitDerivation": [{ "label": "STR", "value": 3 }, { "label": "Proficiency", "value": 2 }],
+      "damage": "1d8 + 3",
+      "damageType": "slashing",
+      "ability": "str",
+      "tags": ["action", "melee"]
+    }
+  ],
+  "features": [
+    { "id": "feature.fighter.second-wind", "name": "Second Wind", "resource": { "pool": "feature.second_wind", "max": 2, "remaining": 2 } }
+  ],
+  "coins": { "cp": 0, "sp": 0, "ep": 0, "gp": 0, "pp": 0 }
+}

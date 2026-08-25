@@ -1,224 +1,170 @@
 /**
- * PromptHolderCard — the one interrupt card, used six ways (Brief 08 §1):
- * opportunity attacks, reaction features, readied actions, legendary actions,
- * legendary resistance, and lair actions. Rendered wherever the holder lives —
- * the player screen for a PC reaction, the DM panel for a monster/boss/lair.
+ * PromptHolderCard — one card, used six ways (Brief 08 §1; Brief 05 rule 7:
+ * the server owns the lifecycle).
  *
- * This is the PRESENTATIONAL shell. It takes a HolderPrompt view-model whose
- * `kind` mirrors the contracts `reaction_prompted` event and whose `context` is
- * a list of plain lines. Brief 08 §1 calls for a typed `PromptContext`
- * discriminated union — that is an explicit FUTURE contract PR; until it lands,
- * this card renders pre-summarized context lines, so no contracts shape is
- * invented here. When PromptContext ships, the caller formats it into lines; the
- * card is unchanged.
+ * Renders wherever the prompt's holder lives: a player's reaction (Player
+ * View, that player's screen only), a monster/boss/lair (DM View), or anyone
+ * when the DM answers for them (DM View, with the `asDm` note). It is an
+ * overlay/interrupt surface, not part of either screen's resting layout —
+ * one modal-priority prompt at a time per viewer.
  *
- * Lifecycle (Brief 08 §1, Brief 05 rule 7): the SERVER owns it. Timeout default
- * 60s ⇒ declined. This card only surfaces the prompt and reports take/decline;
- * it never decides the outcome. One modal-priority prompt at a time per viewer.
+ * THE SERVER OWNS THE LIFECYCLE. This card only surfaces the prompt and
+ * reports take/decline — it never decides the outcome. The countdown here is
+ * a MIRROR of the server's real 60s default timeout, not the authority; the
+ * server enforces the timeout independently. Computed from a `Date.now()`
+ * baseline captured on mount and ticked every 250ms so it stays accurate
+ * even if the tab throttles timers.
  *
- * Themed entirely via theme/tokens.css variables. No hardcoded look.
+ * THE DELIBERATE CONTRACT GAP: `context` is `string[]` — pre-summarised
+ * plain lines — not the typed `PromptContext` union directly. Brief 08 §1
+ * also names two DM-facing decision kinds ("ruling", "rest" — Playbook §3
+ * table) that have no contracts shape yet; keeping the card generic over
+ * plain lines means it doesn't need to change the day those land, or the day
+ * any of the six existing PromptContext kinds gets a new field. See
+ * promptContextToLines.ts for the adapter that formats the six kinds that
+ * DO have a contracts shape today (CLAUDE.md non-negotiable #1: no shape
+ * gets invented here in a feature).
+ *
+ * IT IS THE SAME MATERIAL AS THE ASSISTANT'S CARD, and deliberately so: both
+ * arrive over whatever you were looking at, asking for one decision. They
+ * share `.qa2-modal` — glass, three bands, one rhythm — and differ only in
+ * width and contents. Two interrupts that looked like two different products
+ * was the drift this rebuild exists to end.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactElement, type ReactNode } from 'react';
+import { Button } from '@questra/ui';
+import { DesignStyles, Eyebrow, heroName, prose, statMeta, statValue } from '../design/index.js';
 
-/** Mirrors the contracts reaction_prompted.kind, plus the DM-facing decision kinds
- *  the Playbook §3 table lists for this same card (ruling, rest confirmations). */
-export type HolderPromptKind =
-  | 'opportunity_attack'
-  | 'feature'
-  | 'legendary'
-  | 'lair'
-  | 'ruling'
-  | 'rest';
-
-export interface HolderPromptOption {
+export interface PromptOptionVM {
   id: string;
   label: string;
-  /** Optional cost/detail ("Reaction", "2 of 3 legendary actions", "1 spell slot"). */
+  /** e.g. "Reaction", "2 actions", "DC 13 or restrained". */
   detail?: string;
 }
 
-export interface HolderPrompt {
-  promptId: string;
-  kind: HolderPromptKind;
-  /** Who must answer, in plain language ("Torvald", "The dragon", "The lair"). */
-  holder: string;
-  /** One-line summary of what triggered the prompt. Plain language. */
-  trigger: string;
-  /** Pre-summarized context lines (see doc-comment: awaiting the PromptContext PR). */
-  context?: string[];
-  /** The choices. If empty, the card shows a single Take/Decline pair. */
-  options?: HolderPromptOption[];
-  /** Seconds until auto-decline. Server truth; the card mirrors the countdown. */
-  timeoutSec?: number;
-}
-
 export interface PromptHolderCardProps {
-  prompt: HolderPrompt;
-  /** Take an option (or the default reaction when there are no options). */
-  onTake: (optionId?: string) => void;
-  /** Decline; also fired on timeout. */
-  onDecline: () => void;
-  /**
-   * The DM can always answer for anyone (Brief 08 §1). When true, the card notes
-   * it's being answered on the holder's behalf.
-   */
+  /** Plain-language prompt kind, e.g. "Opportunity Attack", "Legendary Action". */
+  kind: string;
+  /** The holder's display name, e.g. "Wren", "Ancient White Dragon". */
+  holder: string;
+  /** Pre-summarised plain lines — see the contract-gap note above. */
+  context: string[];
+  /** Present for a menu of costed choices (legendary/lair); absent for a bare Take/Decline. */
+  options?: PromptOptionVM[];
+  /** The DM is exercising the holder's choice on their behalf. */
   asDm?: boolean;
+  /** Seconds until auto-decline. Default 60 (Brief 05 rule 7). */
+  timeoutSec?: number;
+  /** Fires with the chosen option's id, or undefined for the bare Take. */
+  onTake: (optionId?: string) => void;
+  onDecline: () => void;
 }
 
-const KIND_LABEL: Record<HolderPromptKind, string> = {
-  opportunity_attack: 'Opportunity attack',
-  feature: 'Reaction',
-  legendary: 'Legendary action',
-  lair: 'Lair action',
-  ruling: 'Ruling',
-  rest: 'Rest',
-};
-
-export function PromptHolderCard({ prompt, onTake, onDecline, asDm = false }: PromptHolderCardProps) {
-  const total = prompt.timeoutSec ?? 60;
-  const [remaining, setRemaining] = useState(total);
+export function PromptHolderCard({
+  kind,
+  holder,
+  context,
+  options,
+  asDm = false,
+  timeoutSec = 60,
+  onTake,
+  onDecline,
+}: PromptHolderCardProps): ReactElement {
+  const startRef = useRef(Date.now());
   const declinedRef = useRef(false);
+  const [remaining, setRemaining] = useState(timeoutSec);
 
-  // Mirror the countdown; on reaching zero, decline once (server does the same).
   useEffect(() => {
+    startRef.current = Date.now();
     declinedRef.current = false;
-    setRemaining(total);
-    const started = Date.now();
-    const tick = setInterval(() => {
-      const left = Math.max(0, total - Math.floor((Date.now() - started) / 1000));
-      setRemaining(left);
-      if (left === 0 && !declinedRef.current) {
+
+    const tick = (): void => {
+      const elapsed = (Date.now() - startRef.current) / 1000;
+      const next = Math.max(0, timeoutSec - elapsed);
+      setRemaining(next);
+      if (next <= 0 && !declinedRef.current) {
         declinedRef.current = true;
-        clearInterval(tick);
         onDecline();
       }
-    }, 250);
-    return () => clearInterval(tick);
-  }, [prompt.promptId, total, onDecline]);
+    };
 
-  const urgent = remaining <= 10;
-  const pct = total > 0 ? (remaining / total) * 100 : 0;
+    const id = setInterval(tick, 250);
+    return () => clearInterval(id);
+  }, [timeoutSec, onDecline]);
+
+  const remainingWhole = Math.ceil(remaining);
+  const urgent = remainingWhole <= 10;
+  const pct = Math.max(0, Math.min(100, (remaining / timeoutSec) * 100));
 
   return (
-    <article
+    <section
+      className={urgent ? 'qa2-modal qa2-prompt is-urgent' : 'qa2-modal qa2-prompt'}
       role="alertdialog"
-      aria-label={`${KIND_LABEL[prompt.kind]} — ${prompt.holder}`}
-      style={{
-        background: 'var(--q-surface)',
-        border: `1px solid ${urgent ? 'var(--q-danger)' : 'var(--q-line)'}`,
-        borderRadius: 'var(--q-radius-lg)',
-        boxShadow: 'var(--q-shadow-pop)',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        transition: 'border-color var(--q-dur-fast) var(--q-ease)',
-      }}
+      aria-label={`${kind} — ${holder}`}
     >
-      {/* countdown bar */}
-      <div aria-hidden style={{ height: 3, background: 'var(--q-line)' }}>
-        <div
-          style={{
-            height: '100%',
-            width: `${pct}%`,
-            background: urgent ? 'var(--q-danger)' : 'var(--q-accent)',
-            transition: 'width 250ms linear, background var(--q-dur-fast) var(--q-ease)',
-          }}
-        />
-      </div>
+      <DesignStyles />
 
-      <header className="flex items-center justify-between gap-3 px-5 py-3" style={{ borderBottom: '1px solid var(--q-line)' }}>
-        <div>
-          <span
-            style={{
-              fontFamily: 'var(--q-font-mono)',
-              fontSize: 'var(--q-text-xs)',
-              letterSpacing: '0.05em',
-              textTransform: 'uppercase',
-              color: 'var(--q-accent)',
-            }}
-          >
-            {KIND_LABEL[prompt.kind]}
-          </span>
-          <h3 style={{ margin: 0, fontFamily: 'var(--q-font-display)', fontSize: 'var(--q-text-lg)', color: 'var(--q-ink)' }}>{prompt.holder}</h3>
-        </div>
+      {/* The countdown mirrors the server's timeout. It is not the mechanism —
+          the server declines on its own clock whether this bar exists or not. */}
+      <span className="qa2-prompt-clock" aria-hidden="true">
+        <span style={{ width: `${pct}%` }} />
+      </span>
+
+      <header className="qa2-modal-head">
+        <Eyebrow>{kind}</Eyebrow>
         <time
-          aria-label={`${remaining} seconds left`}
-          style={{
-            fontFamily: 'var(--q-font-mono)',
-            fontSize: 'var(--q-text-lg)',
-            color: urgent ? 'var(--q-danger)' : 'var(--q-ink-soft)',
-            fontVariantNumeric: 'tabular-nums',
-          }}
+          aria-label={`${remainingWhole} seconds left`}
+          style={{ ...statValue, color: urgent ? 'var(--qa-danger)' : 'var(--qa-ink-faint)' }}
         >
-          {remaining}s
+          {remainingWhole}s
         </time>
       </header>
 
-      <div className="px-5 py-4" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--q-space-3)' }}>
-        <p style={{ margin: 0, color: 'var(--q-ink)', fontSize: 'var(--q-text-base)', lineHeight: 'var(--q-leading-normal)' }}>{prompt.trigger}</p>
+      <div className="qa2-modal-body">
+        <h2 style={{ ...heroName, margin: 0 }}>{holder}</h2>
 
-        {prompt.context && prompt.context.length > 0 && (
-          <ul style={{ margin: 0, paddingLeft: 'var(--q-space-4)', color: 'var(--q-ink-soft)', fontSize: 'var(--q-text-sm)' }}>
-            {prompt.context.map((line, i) => (
-              <li key={i}>{line}</li>
+        {asDm && (
+          <p style={{ ...prose, margin: 0, fontStyle: 'italic', color: 'var(--qa-ink-faint)' }}>
+            Answering for {holder}.
+          </p>
+        )}
+
+        {context.length > 0 && (
+          <ul className="qa2-prompt-lines">
+            {context.map((line, i) => (
+              <li key={i} style={prose}>{line}</li>
             ))}
           </ul>
         )}
-
-        {asDm && (
-          <p style={{ margin: 0, fontSize: 'var(--q-text-xs)', color: 'var(--q-ink-faint)', fontStyle: 'italic' }}>
-            Answering for {prompt.holder}.
-          </p>
-        )}
       </div>
 
-      <footer className="px-5 py-3" style={{ borderTop: '1px solid var(--q-line)', background: 'var(--q-surface-raised)', display: 'flex', flexWrap: 'wrap', gap: 'var(--q-space-2)' }}>
-        {prompt.options && prompt.options.length > 0 ? (
-          <>
-            {prompt.options.map((opt) => (
-              <button key={opt.id} onClick={() => onTake(opt.id)} style={takeStyle}>
-                {opt.label}
-                {opt.detail && <span style={{ marginLeft: 6, opacity: 0.8, fontSize: 'var(--q-text-xs)' }}>{opt.detail}</span>}
-              </button>
-            ))}
-            <div style={{ flex: 1 }} />
-            <button onClick={onDecline} style={declineStyle}>
-              Decline
-            </button>
-          </>
+      {/*
+        THE ACCENT ANSWERS "WHETHER", NOT "WHICH". A bare prompt asks one
+        question — take it or not — so Take is the committing action and wears
+        the accent. A menu of costed moves asks a different question, and three
+        equally accented buttons answered it by shouting all three at once,
+        making a one-point Detect look as urgent as a two-point Wing Attack.
+        Options are a menu: quiet, equal, with their cost on them.
+      */}
+      <footer className="qa2-modal-foot">
+        {options !== undefined && options.length > 0 ? (
+          options.map((option) => (
+            <Button key={option.id} onClick={() => onTake(option.id)}>
+              {option.label}
+              {option.detail !== undefined && <Detail>{option.detail}</Detail>}
+            </Button>
+          ))
         ) : (
-          <>
-            <button onClick={() => onTake()} style={takeStyle}>
-              Take
-            </button>
-            <div style={{ flex: 1 }} />
-            <button onClick={onDecline} style={declineStyle}>
-              Decline
-            </button>
-          </>
+          <Button variant="primary" onClick={() => onTake()}>Take</Button>
         )}
+        <span style={{ flex: 1 }} />
+        <Button variant="danger" onClick={onDecline}>Decline</Button>
       </footer>
-    </article>
+    </section>
   );
 }
 
-const takeStyle: React.CSSProperties = {
-  background: 'var(--q-accent)',
-  color: '#fff',
-  border: 'none',
-  borderRadius: 'var(--q-radius)',
-  padding: 'var(--q-space-2) var(--q-space-4)',
-  fontSize: 'var(--q-text-sm)',
-  fontWeight: 600,
-  cursor: 'pointer',
-};
-
-const declineStyle: React.CSSProperties = {
-  background: 'transparent',
-  color: 'var(--q-ink-soft)',
-  border: '1px solid var(--q-line)',
-  borderRadius: 'var(--q-radius)',
-  padding: 'var(--q-space-2) var(--q-space-4)',
-  fontSize: 'var(--q-text-sm)',
-  cursor: 'pointer',
-};
+/** What an option COSTS, riding on the option itself rather than a legend. */
+function Detail({ children }: { children: ReactNode }): ReactElement {
+  return <span style={{ ...statMeta, marginLeft: 'var(--qa-s2)', opacity: 0.75 }}>{children}</span>;
+}

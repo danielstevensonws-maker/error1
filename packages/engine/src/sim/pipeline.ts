@@ -212,10 +212,8 @@ export function resolveAttack(
     // resistance/vulnerability/immunity adjustment (SRD order; no stacking).
     const adjusted: { resistance?: true; vulnerability?: true; immunity?: true } = {};
     let finalAmount = amount;
-    // 'all' in resistances (e.g. Petrified) resists every damage type (Brief 04 §1).
-    const resistsAll = target.resistances?.includes('all');
     if (target.damageImmunities?.includes(input.damageType)) { adjusted.immunity = true; finalAmount = 0; }
-    else if (resistsAll || target.resistances?.includes(input.damageType)) { adjusted.resistance = true; finalAmount = Math.floor(amount / 2); }
+    else if (target.resistances?.includes(input.damageType)) { adjusted.resistance = true; finalAmount = Math.floor(amount / 2); }
     else if (target.vulnerabilities?.includes(input.damageType)) { adjusted.vulnerability = true; finalAmount = amount * 2; }
 
     const absorbed = Math.min(target.tempHp, finalAmount);

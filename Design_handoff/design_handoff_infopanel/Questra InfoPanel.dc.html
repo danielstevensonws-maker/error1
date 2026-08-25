@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  [data-qa-theme]{
+    --qa-accent:#C05B41; --qa-accent-ink:#FBEEE6;
+    --qa-accent-soft:rgba(192,91,65,.22); --qa-accent-line:rgba(192,91,65,.55); --qa-accent-glow:rgba(192,91,65,.45);
+    --qa-danger:#C8453A; --qa-danger-soft:rgba(200,69,58,.20);
+    --qa-success:#6F9463; --qa-success-soft:rgba(111,148,99,.20);
+    --qa-gold:#C79A47; --qa-gold-soft:rgba(199,154,71,.20);
+    --qa-map-hi:#2A2115; --qa-map-mid:#1B1610; --qa-map-lo:#12100A; --qa-map-grid:rgba(230,220,196,.05);
+    --qa-font-display:'IM Fell English', Georgia, serif;
+    --qa-font-body:'EB Garamond', Georgia, serif;
+    --qa-font-mono:'IBM Plex Mono', ui-monospace, monospace;
+    --qa-tracking-caps:.16em;
+    --qa-text-whisper:10px; --qa-text-label:12px; --qa-text-body:16px; --qa-text-lg:20px; --qa-text-title:28px; --qa-text-display:40px;
+    --qa-s1:4px; --qa-s2:8px; --qa-s3:12px; --qa-s4:16px; --qa-s5:24px; --qa-s6:32px; --qa-s7:48px; --qa-s8:64px; --qa-hud-inset:24px;
+    --qa-radius-sm:3px; --qa-radius:6px; --qa-radius-lg:10px; --qa-radius-round:999px; --qa-hairline:1px;
+    --qa-dur-fast:120ms; --qa-dur:220ms; --qa-dur-slow:420ms;
+    --qa-ease:cubic-bezier(.2,.7,.2,1); --qa-ease-out:cubic-bezier(.16,1,.3,1);
+    --qa-shadow:0 18px 48px -18px rgba(0,0,0,.72), 0 2px 8px rgba(0,0,0,.35);
+    --qa-shadow-pop:0 30px 70px -22px rgba(0,0,0,.8);
+  }
+  [data-qa-theme="ghost"]{
+    --qa-glass:rgba(19,16,9,.55); --qa-glass-solid:rgba(28,24,15,.94);
+    --qa-glass-border:rgba(230,220,196,.14); --qa-glass-blur:14px;
+    --qa-chip:rgba(230,220,196,.08); --qa-scrim:rgba(10,8,4,.55);
+    --qa-ink:#E6DCC4; --qa-ink-dim:rgba(230,220,196,.62); --qa-ink-faint:rgba(230,220,196,.34);
+  }
+  [data-qa-theme="slate"]{
+    --qa-glass:rgba(17,21,29,.68); --qa-glass-solid:rgba(22,27,37,.95);
+    --qa-glass-border:rgba(233,237,244,.15); --qa-glass-blur:20px;
+    --qa-chip:rgba(233,237,244,.08); --qa-scrim:rgba(6,9,14,.6);
+    --qa-ink:#E9EDF4; --qa-ink-dim:rgba(233,237,244,.6); --qa-ink-faint:rgba(233,237,244,.32);
+  }
+  [data-qa-theme="ivory"]{
+    --qa-glass:rgba(243,240,233,.6); --qa-glass-solid:rgba(247,244,237,.96);
+    --qa-glass-border:rgba(32,29,24,.16); --qa-glass-blur:16px;
+    --qa-chip:rgba(32,29,24,.06); --qa-scrim:rgba(32,29,24,.4);
+    --qa-ink:#201D18; --qa-ink-dim:rgba(32,29,24,.62); --qa-ink-faint:rgba(32,29,24,.36);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:#12100A}
+  a{color:var(--qa-accent);text-decoration:none}
+  a:hover{color:var(--qa-accent-line)}
+  @keyframes qa-panel-in{from{transform:translateX(28px);opacity:0}to{transform:translateX(0);opacity:1}}
+  @keyframes qa-scrim-in{from{opacity:0}to{opacity:1}}
+  [data-qa-rm="on"] *{animation:none !important;transition:none !important}
+</style>
+</helmet>
+
+<div data-qa-theme="{{ theme }}" data-qa-rm="{{ rm }}" style="position:relative;height:760px;min-height:760px;overflow:hidden;font-family:var(--qa-font-body);color:var(--qa-ink);background:radial-gradient(120% 90% at 62% 34%, var(--qa-map-hi) 0%, var(--qa-map-mid) 44%, var(--qa-map-lo) 100%)">
+
+  <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(var(--qa-map-grid) 1px, transparent 1px);background-size:88px 88px;opacity:.7"></div>
+  <div style="position:absolute;inset:0;pointer-events:none;background:radial-gradient(130% 100% at 62% 30%, transparent 44%, rgba(0,0,0,.55) 100%)"></div>
+
+  <!-- centred idle label so the map ground reads -->
+  <div style="position:absolute;top:50%;left:44%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
+    <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);letter-spacing:var(--qa-tracking-caps);text-transform:uppercase;color:var(--qa-ink-faint);margin-bottom:var(--qa-s2)">The reference primitive</div>
+    <div style="font-family:var(--qa-font-display);font-size:var(--qa-text-lg);color:var(--qa-ink-dim)">InfoPanel</div>
+  </div>
+
+  <!-- ===== harness (demo control · not part of the primitive) ===== -->
+  <div style="position:absolute;top:var(--qa-hud-inset);left:var(--qa-hud-inset);z-index:5;width:216px;background:var(--qa-glass);border:var(--qa-hairline) solid var(--qa-glass-border);border-radius:var(--qa-radius-lg);backdrop-filter:blur(var(--qa-glass-blur));-webkit-backdrop-filter:blur(var(--qa-glass-blur));box-shadow:var(--qa-shadow);padding:var(--qa-s4)">
+    <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);letter-spacing:var(--qa-tracking-caps);text-transform:uppercase;color:var(--qa-ink-faint);margin-bottom:var(--qa-s3)">Harness · entity</div>
+    <div style="display:flex;flex-direction:column;gap:var(--qa-s1)">
+      <sc-for list="{{ entities }}" as="en" hint-placeholder-count="4">
+        <button onClick="{{ en.pick }}" style="{{ en.style }}" style-hover="border-color:var(--qa-glass-border)">
+          <span>{{ en.name }}</span>
+          <span style="font-family:var(--qa-font-mono);font-size:9px;color:var(--qa-ink-faint)">{{ en.tag }}</span>
+        </button>
+      </sc-for>
+    </div>
+    <div style="height:var(--qa-hairline);background:var(--qa-glass-border);margin:var(--qa-s3) 0"></div>
+    <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);letter-spacing:var(--qa-tracking-caps);text-transform:uppercase;color:var(--qa-ink-faint);margin-bottom:var(--qa-s2)">Layers</div>
+    <div style="display:flex;gap:var(--qa-s1)">
+      <button onClick="{{ toggleL2 }}" style="{{ l2BtnStyle }}">L2</button>
+      <button onClick="{{ toggleL3 }}" style="{{ l3BtnStyle }}">L3</button>
+      <button onClick="{{ reopen }}" style="{{ reopenStyle }}">open</button>
+    </div>
+  </div>
+
+  <!-- ===== the InfoPanel ===== -->
+  <sc-if value="{{ panelOpen }}" hint-placeholder-val="{{ true }}">
+    <div onClick="{{ close }}" style="position:absolute;inset:0;z-index:10;background:var(--qa-scrim);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);animation:qa-scrim-in var(--qa-dur) var(--qa-ease)"></div>
+
+    <aside role="dialog" aria-modal="true" aria-label="{{ e.name }}" tabindex="-1" ref="{{ panelRef }}" style="position:absolute;top:0;right:0;z-index:11;height:100%;width:428px;display:flex;flex-direction:column;background:var(--qa-glass);border-left:var(--qa-hairline) solid var(--qa-glass-border);backdrop-filter:blur(var(--qa-glass-blur));-webkit-backdrop-filter:blur(var(--qa-glass-blur));box-shadow:var(--qa-shadow-pop);outline:none;animation:qa-panel-in var(--qa-dur-slow) var(--qa-ease-out)">
+
+      <!-- header (solid glass) -->
+      <header style="flex:none;background:var(--qa-glass-solid);border-bottom:var(--qa-hairline) solid var(--qa-glass-border);padding:var(--qa-s5) var(--qa-s5) var(--qa-s4)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:var(--qa-s3)">
+          <div style="display:flex;align-items:center;gap:var(--qa-s2);flex-wrap:wrap">
+            <span style="font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);letter-spacing:var(--qa-tracking-caps);text-transform:uppercase;color:var(--qa-ink-dim)">{{ e.kind }}</span>
+            <sc-if value="{{ e.homebrew }}" hint-placeholder-val="{{ true }}">
+              <span style="font-family:var(--qa-font-mono);font-size:9px;letter-spacing:var(--qa-tracking-caps);text-transform:uppercase;color:var(--qa-accent);background:var(--qa-accent-soft);border:var(--qa-hairline) solid var(--qa-accent-line);padding:2px 8px;border-radius:var(--qa-radius-round)">Homebrew</span>
+            </sc-if>
+          </div>
+          <button onClick="{{ close }}" aria-label="Close" style="flex:none;width:30px;height:30px;display:grid;place-items:center;margin:-4px -6px 0 0;background:transparent;border:none;border-radius:var(--qa-radius);color:var(--qa-ink-faint);font-family:var(--qa-font-mono);font-size:16px;cursor:pointer;transition:color var(--qa-dur) var(--qa-ease)" style-hover="color:var(--qa-ink)">✕</button>
+        </div>
+        <h2 style="font-family:var(--qa-font-display);font-weight:400;font-size:var(--qa-text-title);line-height:1.08;margin:var(--qa-s2) 0 0;color:var(--qa-ink)">{{ e.name }}</h2>
+      </header>
+
+      <!-- body (scrolls) -->
+      <div style="flex:1;overflow-y:auto;padding:var(--qa-s5)">
+
+        <!-- Layer 1 — always visible -->
+        <p style="font-family:var(--qa-font-body);font-size:var(--qa-text-lg);line-height:1.5;color:var(--qa-ink);margin:0;text-wrap:pretty">{{ e.summary }}</p>
+
+        <!-- Layer 2 — derivation, collapsible -->
+        <sc-if value="{{ e.hasDerivation }}" hint-placeholder-val="{{ true }}">
+          <div style="margin-top:var(--qa-s5);border-top:var(--qa-hairline) solid var(--qa-glass-border)">
+            <button onClick="{{ toggleL2 }}" aria-expanded="{{ l2Open }}" style="width:100%;display:flex;justify-content:space-between;align-items:center;gap:var(--qa-s3);padding:var(--qa-s4) 0 var(--qa-s3);background:transparent;border:none;cursor:pointer;text-align:left" style-hover="opacity:.82">
+              <span style="font-family:var(--qa-font-mono);font-size:var(--qa-text-label);letter-spacing:var(--qa-tracking-caps);text-transform:uppercase;color:var(--qa-ink-dim)">Where the numbers come from</span>
+              <span style="font-family:var(--qa-font-mono);font-size:var(--qa-text-label);color:var(--qa-ink-faint)">{{ l2Chevron }}</span>
+            </button>
+            <sc-if value="{{ l2Open }}" hint-placeholder-val="{{ true }}">
+              <div style="padding-bottom:var(--qa-s2)">
+                <sc-for list="{{ e.rows }}" as="r" hint-placeholder-count="4">
+                  <div style="{{ r.rowStyle }}">
+                    <div style="font-family:var(--qa-font-body);font-size:var(--qa-text-body);color:var(--qa-ink-dim);flex:1">{{ r.label }}</div>
+                    <div style="text-align:right;flex:none">
+                      <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-body);color:var(--qa-ink);line-height:1.2">{{ r.value }}</div>
+                      <sc-if value="{{ r.parts }}" hint-placeholder-val="10d6">
+                        <div style="font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);color:var(--qa-ink-faint);line-height:1.4;margin-top:3px">{{ r.parts }}</div>
+                      </sc-if>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <!-- Layer 3 — full rules text, collapsible -->
+        <sc-if value="{{ e.hasRules }}" hint-placeholder-val="{{ true }}">
+          <div style="margin-top:var(--qa-s4);border-top:var(--qa-hairline) solid var(--qa-glass-border)">
+            <button onClick="{{ toggleL3 }}" aria-expanded="{{ l3Open }}" style="width:100%;display:flex;justify-content:space-between;align-items:center;gap:var(--qa-s3);padding:var(--qa-s4) 0 var(--qa-s3);background:transparent;border:none;cursor:pointer;text-align:left" style-hover="opacity:.82">
+              <span style="font-family:var(--qa-font-mono);font-size:var(--qa-text-label);letter-spacing:var(--qa-tracking-caps);text-transform:uppercase;color:var(--qa-ink-dim)">Full rules text</span>
+              <span style="font-family:var(--qa-font-mono);font-size:var(--qa-text-label);color:var(--qa-ink-faint)">{{ l3Chevron }}</span>
+            </button>
+            <sc-if value="{{ l3Open }}" hint-placeholder-val="{{ true }}">
+              <div style="font-family:var(--qa-font-body);font-size:var(--qa-text-body);line-height:1.6;color:var(--qa-ink-dim);white-space:pre-line;padding-bottom:var(--qa-s2);text-wrap:pretty">{{ e.rulesText }}</div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+      </div>
+
+      <!-- footer (solid glass) — only when this is a pick context -->
+      <sc-if value="{{ e.choose }}" hint-placeholder-val="{{ true }}">
+        <footer style="flex:none;background:var(--qa-glass-solid);border-top:var(--qa-hairline) solid var(--qa-glass-border);padding:var(--qa-s4) var(--qa-s5)">
+          <button onClick="{{ close }}" style="width:100%;height:48px;display:grid;place-items:center;background:var(--qa-accent);color:var(--qa-accent-ink);border:none;border-radius:var(--qa-radius);font-family:var(--qa-font-body);font-size:var(--qa-text-body);font-weight:500;letter-spacing:.01em;cursor:pointer;box-shadow:0 0 0 0 var(--qa-accent-glow);transition:box-shadow var(--qa-dur) var(--qa-ease),transform var(--qa-dur-fast) var(--qa-ease)" style-hover="box-shadow:0 8px 24px -8px var(--qa-accent-glow)" style-active="transform:translateY(1px)">{{ e.chooseLabel }}</button>
+        </footer>
+      </sc-if>
+
+    </aside>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1080,&quot;height&quot;:760},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ghost&quot;,&quot;slate&quot;,&quot;ivory&quot;],&quot;default&quot;:&quot;ghost&quot;,&quot;tsType&quot;:&quot;'ghost'|'slate'|'ivory'&quot;,&quot;section&quot;:&quot;Theme&quot;},&quot;reduceMotion&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Theme&quot;}}">
+class Component extends DCLogic {
+  panelRef = React.createRef();
+  state = { idx: 1, l2Open: true, l3Open: false, panelOpen: true };
+
+  componentDidMount(){
+    this._onKey = (ev) => { if (ev.key === 'Escape' && this.state.panelOpen) this.setState({ panelOpen: false }); };
+    window.addEventListener('keydown', this._onKey);
+  }
+  componentWillUnmount(){ window.removeEventListener('keydown', this._onKey); }
+  componentDidUpdate(_p, prev){
+    if (this.state.panelOpen && !prev.panelOpen && this.panelRef.current) this.panelRef.current.focus();
+  }
+
+  DATA = [
+    {
+      name:'Prone', kind:'Condition', tag:'sparse',
+      summary:"You're on the ground — slow to rise, hard to hit from range, easy to hit up close.",
+      rulesText:"A prone creature's only movement option is to crawl, unless it stands up and thereby ends the condition.\n\nThe creature has disadvantage on attack rolls.\n\nAn attack roll against the creature has advantage if the attacker is within 5 feet of the creature. Otherwise, the attack roll has disadvantage.",
+      choose:false,
+    },
+    {
+      name:'Fireball', kind:'Spell — Level 3 Evocation', tag:'choose',
+      summary:'A bead of fire streaks to a point you choose and blooms into a roaring blast.',
+      derivation:[
+        { label:'Damage', value:'8d6 fire', parts:'3d6 base + 1d6 / slot level above 3rd' },
+        { label:'Save DC', value:'15', parts:'8 + 4 INT mod + 3 prof' },
+        { label:'Radius', value:'20 ft', parts:'sphere · spreads round corners' },
+        { label:'Range', value:'150 ft' },
+      ],
+      rulesText:"Each creature in a 20-foot-radius sphere centered on that point must make a Dexterity saving throw. A target takes 8d6 fire damage on a failed save, or half as much on a successful one.\n\nThe fire spreads around corners. It ignites flammable objects in the area that aren't being worn or carried.",
+      choose:true, chooseLabel:'Prepare Fireball',
+    },
+    {
+      name:'Emberweave Cloak', kind:'Wondrous Item — Rare', tag:'homebrew', homebrew:true,
+      summary:'A cloak banked with living coals; it wards the cold and, once a day, answers fire with fire.',
+      derivation:[
+        { label:'Resistance', value:'cold' },
+        { label:'Flare', value:'2d8 fire', parts:'1/day reaction when you take fire damage' },
+        { label:'Attunement', value:'required' },
+      ],
+      rulesText:"While wearing this cloak you have resistance to cold damage.\n\nWhen you take fire damage, you can use your reaction to wreathe yourself in flame. Each creature within 5 feet of you takes 2d8 fire damage. Once used, this property can't be used again until the next dawn.",
+      choose:true, chooseLabel:'Attune',
+    },
+    {
+      name:'Dire Wolf', kind:'Creature — CR 1 · Large beast', tag:'dense',
+      summary:'A wolf the size of a pony and every bit as fast — it hunts in a pack and drags its prey to the ground.',
+      derivation:[
+        { label:'Armor Class', value:'14', parts:'natural armor' },
+        { label:'Hit Points', value:'37', parts:'5d10 + 10' },
+        { label:'Speed', value:'50 ft' },
+        { label:'Bite', value:'+5 to hit', parts:'2d6 + 3 piercing · reach 5 ft' },
+        { label:'Pack Tactics', value:'advantage', parts:'if an ally is within 5 ft of the target' },
+      ],
+      rulesText:"Pack Tactics. The wolf has advantage on an attack roll against a creature if at least one of the wolf's allies is within 5 feet of the creature and the ally isn't incapacitated.\n\nBite. Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 10 (2d6 + 3) piercing damage. If the target is a creature, it must succeed on a DC 13 Strength saving throw or be knocked prone.",
+      choose:false,
+    },
+  ];
+
+  renderVals(){
+    const s = this.state;
+    const raw = this.DATA[s.idx];
+    const hasDerivation = Array.isArray(raw.derivation) && raw.derivation.length > 0;
+    const rows = hasDerivation ? raw.derivation.map((r, i) => ({
+      label:r.label, value:r.value, parts:r.parts || null,
+      rowStyle:'display:flex;justify-content:space-between;align-items:baseline;gap:var(--qa-s4);padding:var(--qa-s3) 0;'
+        + (i === 0 ? '' : 'border-top:var(--qa-hairline) solid var(--qa-glass-border);'),
+    })) : [];
+    const e = {
+      name:raw.name, kind:raw.kind, summary:raw.summary,
+      homebrew:!!raw.homebrew, hasDerivation, rows,
+      hasRules:!!raw.rulesText, rulesText:raw.rulesText || '',
+      choose:!!raw.choose, chooseLabel:raw.chooseLabel || 'Choose',
+    };
+
+    const enBtn = (on) => 'display:flex;justify-content:space-between;align-items:center;gap:var(--qa-s2);width:100%;padding:var(--qa-s2) var(--qa-s3);border-radius:var(--qa-radius);cursor:pointer;font-family:var(--qa-font-body);font-size:var(--qa-text-label);text-align:left;transition:all var(--qa-dur) var(--qa-ease);border:var(--qa-hairline) solid '
+      + (on ? 'var(--qa-accent-line);background:var(--qa-accent-soft);color:var(--qa-ink);' : 'transparent;background:var(--qa-chip);color:var(--qa-ink-dim);');
+    const entities = this.DATA.map((d, i) => ({
+      name:d.name, tag:d.tag, style:enBtn(i === s.idx),
+      pick:() => this.setState({ idx:i, panelOpen:true, l2Open:!!(d.derivation && d.derivation.length), l3Open:false }),
+    }));
+
+    const miniBtn = (on) => 'flex:1;padding:var(--qa-s2) 0;border-radius:var(--qa-radius);cursor:pointer;font-family:var(--qa-font-mono);font-size:var(--qa-text-whisper);letter-spacing:.1em;text-transform:uppercase;transition:all var(--qa-dur) var(--qa-ease);border:var(--qa-hairline) solid '
+      + (on ? 'var(--qa-accent-line);background:var(--qa-accent-soft);color:var(--qa-ink);' : 'var(--qa-glass-border);background:transparent;color:var(--qa-ink-dim);');
+
+    return {
+      theme:this.props.theme ?? 'ghost',
+      rm:(this.props.reduceMotion ? 'on' : 'off'),
+      panelOpen:s.panelOpen, e,
+      l2Open:s.l2Open, l3Open:s.l3Open,
+      l2Chevron:s.l2Open ? '▾' : '▸', l3Chevron:s.l3Open ? '▾' : '▸',
+      toggleL2:() => this.setState(x => ({ l2Open:!x.l2Open })),
+      toggleL3:() => this.setState(x => ({ l3Open:!x.l3Open })),
+      close:() => this.setState({ panelOpen:false }),
+      reopen:() => this.setState({ panelOpen:true }),
+      entities,
+      l2BtnStyle:miniBtn(s.l2Open), l3BtnStyle:miniBtn(s.l3Open), reopenStyle:miniBtn(s.panelOpen),
+    };
+  }
+}
+</script>
+</body>
+</html>

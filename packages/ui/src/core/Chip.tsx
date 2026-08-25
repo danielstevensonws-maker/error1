@@ -1,54 +1,46 @@
-import type { CSSProperties, ReactNode, ReactElement } from 'react';
+/**
+ * Chip — a small inline tag.
+ *
+ * Tones carry meaning, not decoration: `accent` marks provenance (the Homebrew
+ * badge — a tint, never a warning), `danger` marks a real problem, `gold` marks
+ * something notable (a hand-entered roll). `neutral` is the default wash.
+ */
+import type { CSSProperties, ReactNode } from 'react';
+
+export type ChipTone = 'neutral' | 'accent' | 'danger' | 'success' | 'gold';
 
 export interface ChipProps {
-  children?: ReactNode;
-  /** Semantic tone. Each hue means one thing — `danger` = Bloodied, `arcane` = spell, etc. */
-  tone?: 'default' | 'danger' | 'accent' | 'heal' | 'arcane' | 'steel' | 'gold' | 'bright';
-  /** Hairline outline instead of the ghost fill. Use for badges over imagery. */
-  outline?: boolean;
+  children: ReactNode;
+  tone?: ChipTone;
+  /** Numbers read in mono — "prose is a serif, data is mono". */
+  mono?: boolean;
+  className?: string;
   style?: CSSProperties;
 }
 
-interface ChipTone {
-  fg: string;
-  bd: string;
-}
-
-const TONES: Record<NonNullable<ChipProps['tone']>, ChipTone> = {
-  default: { fg: 'var(--qa-vellum-dim)', bd: 'var(--qa-hairline)' },
-  danger: { fg: 'var(--qa-danger)', bd: 'rgba(192,86,62,.5)' },
-  accent: { fg: 'var(--qa-ember-bright)', bd: 'rgba(192,91,65,.5)' },
-  heal: { fg: 'var(--qa-heal)', bd: 'rgba(143,184,154,.5)' },
-  arcane: { fg: 'var(--qa-arcane)', bd: 'rgba(154,143,184,.5)' },
-  steel: { fg: 'var(--qa-steel)', bd: 'rgba(143,163,184,.5)' },
-  gold: { fg: 'var(--qa-gold)', bd: 'rgba(214,150,90,.5)' },
-  bright: { fg: 'var(--qa-vellum)', bd: 'var(--qa-hairline)' },
+const TONE: Record<ChipTone, CSSProperties> = {
+  neutral: { background: 'var(--qa-chip)', color: 'var(--qa-ink-dim)' },
+  accent: { background: 'var(--qa-accent-soft)', color: 'var(--qa-accent)' },
+  danger: { background: 'var(--qa-chip)', color: 'var(--qa-danger)' },
+  success: { background: 'var(--qa-chip)', color: 'var(--qa-success)' },
+  gold: { background: 'var(--qa-chip)', color: 'var(--qa-gold)' },
 };
 
-/**
- * Tiny mono status pill for conditions, tags and badges (Bloodied, Concentrating, NEW ENTRY).
- * Whispers by default; tone carries meaning, not decoration.
- *
- * Ported from components/core/Chip.jsx; reads only --qa-* tokens (the tone-border
- * rgba() values are the semantic hues at 0.5 alpha, matching the reference verbatim).
- */
-export function Chip({ children, tone = 'default', outline = false, style = {} }: ChipProps): ReactElement {
-  const t = TONES[tone] ?? TONES.default;
+export function Chip({ children, tone = 'neutral', mono = false, className, style }: ChipProps) {
   return (
     <span
+      className={className}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        fontFamily: 'var(--qa-font-mono)',
-        fontSize: 'var(--qa-text-micro)',
-        letterSpacing: 'var(--qa-track-label)',
-        textTransform: 'uppercase',
-        padding: '2px 7px',
-        borderRadius: 'var(--qa-radius-xs)',
-        color: t.fg,
-        background: outline ? 'transparent' : 'var(--qa-vellum-ghost)',
-        border: outline ? `1px solid ${t.bd}` : 'none',
+        gap: 'var(--qa-s1)',
+        padding: 'var(--qa-s1) calc(var(--qa-s4) / 2)',
+        borderRadius: 'var(--qa-radius)',
+        fontFamily: mono ? 'var(--qa-font-mono)' : 'var(--qa-font-body)',
+        fontSize: '0.8125rem',
+        lineHeight: 1.2,
         whiteSpace: 'nowrap',
+        ...TONE[tone],
         ...style,
       }}
     >

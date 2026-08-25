@@ -1,0 +1,22 @@
+{
+  "id": "condition.prone",
+  "entityType": "condition",
+  "name": "Prone",
+  "source": "srd-5.2.1",
+  "version": "2026.07.0",
+  "qa": "verified",
+  "plain": "You're on the ground: your attacks are worse, melee attacks against you are better, and standing up costs half your movement.",
+  "srd_text": "While you have the Prone condition, you experience the following effects. Restricted Movement. Your only movement options are to crawl or to spend an amount of movement equal to half your Speed (round down) to right yourself and thereby end the condition. If your Speed is 0, you can't right yourself. Attacks Affected. You have Disadvantage on attack rolls. An attack roll against you has Advantage if the attacker is within 5 feet of you. Otherwise, that attack roll has Disadvantage.",
+  "effects": [
+    { "hook": "disadvantage", "scope": { "kind": "attack_roll", "by": "self" } },
+    { "hook": "advantage", "scope": { "kind": "attack_roll", "by": "against_self", "range": "melee_5ft" } },
+    { "hook": "disadvantage", "scope": { "kind": "attack_roll", "by": "against_self", "range": "ranged" } },
+    { "hook": "movement_mode", "mode": "crawl_only" }
+  ],
+  "resolution": "routine",
+  "meta": {
+    "endedBy": [
+      { "action": "stand", "cost": "half_speed_round_down", "requires": "speed > 0" }
+    ]
+  }
+}

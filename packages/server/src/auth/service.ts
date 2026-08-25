@@ -177,6 +177,14 @@ export class AuthService {
     await this.deps.repo.revokeAllRefresh(row.accountId); // every session dies on a reset
   }
 
+  // --- self ------------------------------------------------------------------
+  /** GET /auth/me's read: the client-safe self-view for the bearer token's account. */
+  async getSelf(accountId: string): Promise<SelfAccount> {
+    const acc = await this.deps.repo.accountById(accountId);
+    if (!acc || acc.deletedAt) throw new AuthError('auth', 'Please sign in.', 401);
+    return toSelf(acc);
+  }
+
   // --- deletion ------------------------------------------------------------
   async deleteAccount(accountId: string): Promise<void> {
     const owned = await this.deps.repo.ownedCampaigns(accountId);

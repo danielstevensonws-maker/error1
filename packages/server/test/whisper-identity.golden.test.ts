@@ -37,9 +37,9 @@ async function seatedRepo(): Promise<{ repo: InMemoryAuthRepo; alice: string; bo
   });
   await svc.signup('alice@example.com', 'alice password', 'Alice');
   await svc.signup('bob@example.com', 'bob password', 'Bob');
-  repo.addCampaign({ id: CAMPAIGN, name: 'Whisper Test', ownerAccountId: 'acc_alice' });
-  repo.addSession(PS, CAMPAIGN);
   const at = '2026-07-20T00:00:00.000Z';
+  await repo.createCampaign({ id: CAMPAIGN, name: 'Whisper Test', ownerAccountId: 'acc_alice', createdAt: at });
+  await repo.createPlaySession(PS, CAMPAIGN, at);
   await repo.addMembership({ campaignId: CAMPAIGN, accountId: 'acc_alice', role: 'player', createdAt: at });
   await repo.addMembership({ campaignId: CAMPAIGN, accountId: 'acc_bob', role: 'player', createdAt: at });
   return { repo, alice: 'acc_alice', bob: 'acc_bob' };

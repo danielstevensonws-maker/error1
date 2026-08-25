@@ -1,353 +1,290 @@
 /**
- * InfoPanel — THE primitive. Character Wizard §4: "one component, used
- * everywhere." Reused by: wizard, compendium, session planner, level-up,
- * homebrew builder, community library, and every tap-"?" in play.
+ * InfoPanel — THE reference surface. One sheet, three layers, two entry paths.
  *
- * Three jobs (all from the spec):
- *   1. INFORMS via three layers — plain sentence / derivation / full SRD text.
- *      These map 1:1 onto the contracts RulesEntity shape (plain / derivation
- *      / srd_text), so the panel renders any class/species/feat/spell/stat/
- *      condition — official OR homebrew — with zero per-type code.
- *   2. SELECTS — the "Choose" button lives INSIDE the panel, so reading,
- *      understanding, and deciding are one motion.
- *   3. RENDERS HOMEBREW IDENTICALLY — a homebrew entity opens in this exact
- *      panel; the source flag is the only difference, shown as a quiet badge.
+ * WHAT THIS ABSORBED. The play screen grew its own `ExplainSheet` while this
+ * panel already existed, and the two were doing the same job in two visual
+ * languages: "here is a number, here is the working behind it, here is what it
+ * means in plain English." That is one surface, so it is now one component.
+ * The play screen passes an `ExplainVM` through `fromExplain()`; the wizard and
+ * compendium pass an entity through `entityToInfoPanel()`. Same sheet either
+ * way — which is the point, because a player who taps Armor Class mid-combat
+ * and a DM who opens a spell in the compendium are asking the same question.
  *
- * Design: the Questra V1 Prototype sheet, §InfoPanel. A floating glass card
- * (--qa-glass-raised, heavy blur, shadow-menu), kicker over title, layer
- * toggles as uppercase-mono rows with ▸/▾ chevrons, derivation as a label +
- * big-mono-number list with faint sub-parts, and the ember Choose button. Adds
- * the loading (candle-breath skeleton) and not-found states from the sheet.
- * Themed entirely via --qa-* tokens.
+ * THE THREE LAYERS (progressive disclosure, never a wall of text)
+ *   L1  the summary — one sentence, always visible.
+ *   L2  the derivation — the itemised rows that produced the value.
+ *   L3  the verbatim rules text — collapsed by default, for the pedant moment.
+ *
+ * THE TWO ENTRY PATHS decide only which layer leads, nothing else:
+ *   "explain" (the ? on a number)  → leads with L2, never shows a Choose footer.
+ *   "read"    (an entity's card)   → leads with L1, may show Choose in a picker.
+ *
+ * WHERE IT SITS follows from the same distinction, because the two paths are
+ * interrupted differently. Explaining happens mid-play, so the sheet is
+ * CENTRED over the map: anchored to nothing, and — importantly — not covering
+ * the panel whose number you just tapped. Reading happens while browsing, so
+ * it takes the SIDE, leaving the list you are scanning in view beside it.
+ * `placement` overrides when a caller knows better.
+ *
+ * NO ORPHAN MATH (design request §5). Every number in the app is reachable
+ * through this panel, and `ExplainVM` makes that structural rather than
+ * aspirational: a value cannot be rendered through the shared readout without
+ * carrying the means to justify itself here.
  */
-import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactElement } from 'react';
+import { DesignStyles, Eyebrow, Glyph, prose, narration, quote, rollTotal, sceneName, statMeta, statValue, type ExplainVM } from '../design/index.js';
+import type { DerivationLine, InfoPanelData } from './entityToInfoPanel.js';
 
-/** Layer 2 line: a computed value with its provenance ("15 = 11 base + 2 Dex + 2 shield"). */
-export interface DerivationLine {
-  label: string;
-  value: string | number;
-  /** optional breakdown parts, each a small labeled contribution */
-  parts?: { label: string; value: string | number }[];
+/** How the panel was entered — sets which layer leads. */
+export type InfoPanelMode = 'explain' | 'read';
+
+/** Centred over the work, or docked to the side of it. */
+export type InfoPanelPlacement = 'center' | 'side';
+
+export interface InfoPanelProps {
+  data: InfoPanelData;
+  open?: boolean;
+  onClose: () => void;
+  /** Path 1 vs Path 2. Default "read". */
+  openMode?: InfoPanelMode;
+  /** Defaults to "center" when explaining, "side" when reading. */
+  placement?: InfoPanelPlacement;
+  /**
+   * Whether a Choose footer appears. Honoured only in "read" mode — when
+   * explaining, the panel is pure reference and the footer is always absent.
+   */
+  showChoose?: boolean;
+  onChoose?: (data: InfoPanelData) => void;
+  /** Footer label; defaults to "Choose". */
+  chooseLabel?: string;
 }
 
 /**
- * The panel's data contract. A thin view-model derived from a contracts
- * RulesEntity — the caller maps entity.plain → summary, entity.derivation →
- * derivation, entity.srd_text → rulesText. Kept as its own type so non-entity
- * things (a computed AC, a homebrew draft-in-progress) can also open the panel.
+ * The adapter that let this panel absorb the play screen's explain sheet.
+ * `ExplainVM` is the design layer's shape for "an interrogable number"; this
+ * widens it into the panel's three-layer shape without inventing anything —
+ * `rule` is the summary, `flavour` rides along, and there is no L3 because a
+ * derived number has no verbatim rules text to quote.
  */
-export interface InfoPanelData {
-  name: string;
-  kind: string;                     // "Class", "Condition", "Spell — Level 3", etc. (plain-language)
-  source: 'srd-5.2.1' | 'homebrew';
-  summary: string;                  // Layer 1 — one plain sentence
-  derivation?: DerivationLine[];    // Layer 2 — where numbers came from (optional; many entities have none)
-  rulesText?: string;               // Layer 3 — full SRD text
-  /** Optional extra slot for rich content (e.g. a homebrew level table preview). */
-  extra?: ReactNode;
+export function fromExplain(e: ExplainVM): InfoPanelData {
+  return {
+    name: e.title,
+    kind: e.kicker,
+    summary: e.rule,
+    value: e.value,
+    derivation: e.rows.map((r) => ({ label: r.label, value: r.value })),
+    ...(e.flavour !== undefined ? { flavour: e.flavour } : {}),
+  };
 }
-
-export interface InfoPanelProps {
-  open: boolean;
-  data: InfoPanelData | null;
-  onClose: () => void;
-  /**
-   * When present, renders the in-panel "Choose" button (job #2). Omit for
-   * pure-reference contexts (compendium browsing) where nothing is being picked.
-   */
-  onChoose?: () => void;
-  chooseLabel?: string;
-  /** Which layers to expand by default. Beginners want L1; veterans open L3. */
-  defaultExpanded?: ('derivation' | 'rules')[];
-  /** The lookup is still resolving — show the candle-breath skeleton. */
-  loading?: boolean;
-}
-
-const kickerStyle: CSSProperties = {
-  fontFamily: 'var(--qa-font-mono)',
-  fontSize: 8.5,
-  letterSpacing: 'var(--qa-track-label)',
-  textTransform: 'uppercase',
-  color: 'var(--qa-glass-dim)',
-};
-
-const cardShell: CSSProperties = {
-  width: 300,
-  borderRadius: 'var(--qa-radius-lg)',
-  background: 'var(--qa-glass-raised)',
-  border: '1px solid var(--qa-glass-border)',
-  backdropFilter: 'blur(var(--qa-blur-heavy))',
-  WebkitBackdropFilter: 'blur(var(--qa-blur-heavy))',
-  boxShadow: 'var(--qa-shadow-menu)',
-  display: 'flex',
-  flexDirection: 'column',
-  color: 'var(--qa-glass-text)',
-};
 
 export function InfoPanel({
-  open,
   data,
+  open = true,
   onClose,
+  openMode = 'read',
+  placement,
+  showChoose = false,
   onChoose,
   chooseLabel = 'Choose',
-  defaultExpanded = [],
-  loading = false,
-}: InfoPanelProps) {
-  const titleId = useId();
-  const panelRef = useRef<HTMLDivElement>(null);
-  const [showDerivation, setShowDerivation] = useState(defaultExpanded.includes('derivation'));
-  const [showRules, setShowRules] = useState(defaultExpanded.includes('rules'));
+}: InfoPanelProps): ReactElement | null {
+  const panelRef = useRef<HTMLElement>(null);
 
-  // Escape closes; focus moves into the panel on open (accessibility).
+  const hasDerivation = data.derivation !== undefined && data.derivation.length > 0;
+  const hasRules = data.rulesText !== undefined && data.rulesText.trim() !== '';
+
+  const l2Default = openMode === 'explain' && hasDerivation;
+  const footerVisible = openMode === 'read' && showChoose;
+  const side = (placement ?? (openMode === 'explain' ? 'center' : 'side')) === 'side';
+
+  const [l2Open, setL2Open] = useState(l2Default);
+  const [l3Open, setL3Open] = useState(false);
+
+  // Collapse state resets whenever the subject or the entry mode changes —
+  // otherwise a freshly-opened panel inherits the previous one's layers.
   useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', onKey);
-    panelRef.current?.focus();
-    return () => document.removeEventListener('keydown', onKey);
+    setL2Open(l2Default);
+    setL3Open(false);
+  }, [data.name, l2Default]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
-  // Reset layer state when the subject changes.
+  // Focus moves into the panel on open, so keyboard users land inside it.
   useEffect(() => {
-    setShowDerivation(defaultExpanded.includes('derivation'));
-    setShowRules(defaultExpanded.includes('rules'));
-  }, [data?.name]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (open) panelRef.current?.focus();
+  }, [open]);
+
+  const close = useCallback(() => onClose(), [onClose]);
 
   if (!open) return null;
 
   return (
-    <div
-      className="flex fixed inset-0 z-50 justify-center items-center"
-      style={{ background: 'color-mix(in srgb, var(--qa-ink) 55%, transparent)' }}
-      onClick={onClose}
-    >
-      <div
+    <div style={{ position: 'absolute', inset: 0 }}>
+      <DesignStyles />
+
+      <button type="button" className="qa2-scrim" onClick={close} aria-label="Close this and go back" />
+
+      <aside
         ref={panelRef}
+        className="qa2-sheet"
         role="dialog"
         aria-modal="true"
-        aria-labelledby={titleId}
+        aria-label={data.name}
         tabIndex={-1}
-        onClick={(e) => e.stopPropagation()}
-        style={{ ...cardShell, outline: 'none', animation: 'qa-info-rise var(--qa-dur) var(--qa-ease)' }}
+        style={
+          side
+            ? { top: 0, right: 0, height: '100%', width: 'min(428px, 100%)', borderRadius: 0, outline: 'none' }
+            : {
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: 'min(440px, calc(100% - var(--qa-s6)))',
+                maxHeight: '76%',
+                outline: 'none',
+              }
+        }
       >
-        {loading ? (
-          <LoadingSkeleton />
-        ) : !data ? (
-          <NotFound onClose={onClose} />
-        ) : (
-          <>
-            {/* header — kicker over title, homebrew badge inline */}
-            <div style={{ padding: '16px 16px 0', display: 'flex', flexDirection: 'column', gap: 3 }}>
-              <span style={kickerStyle}>{data.kind}</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span
-                  id={titleId}
-                  style={{
-                    fontFamily: 'var(--qa-font-display)',
-                    fontSize: 'var(--qa-text-xl)',
-                    color: 'var(--qa-glass-text)',
-                  }}
-                >
-                  {data.name}
-                </span>
-                {data.source === 'homebrew' && <HomebrewBadge />}
-              </span>
-            </div>
+        <div className="qa2-sheet-head">
+          <span style={{ display: 'flex', flexDirection: 'column', gap: 'var(--qa-s1)', minWidth: 0 }}>
+            <Eyebrow>{data.kind}</Eyebrow>
+            <h2 style={{ ...sceneName, margin: 0 }}>{data.name}</h2>
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--qa-s2)', flex: 'none' }}>
+            {/* Homebrew is a provenance tint, never a warning — the balance
+                check is the thing that judges, and it says so elsewhere. */}
+            {data.homebrew === true && <span className="qa2-chip is-accent is-static">Homebrew</span>}
+            <button type="button" className="qa2-ctl" style={{ width: 28, height: 28 }} onClick={close} aria-label="Close">
+              <Glyph name="close" size={13} />
+            </button>
+          </span>
+        </div>
 
-            {/* Layer 1 — always visible */}
-            <div style={{ padding: '12px 16px', fontSize: 15, lineHeight: 1.5, color: 'var(--qa-glass-text)' }}>
-              {data.summary}
-            </div>
+        <div className="qa2-sheet-body">
+          {/* The headline number, when the subject IS one. An entity has no
+              single value, so this simply does not render for the read path. */}
+          {data.value !== undefined && <span style={{ ...rollTotal, alignSelf: 'flex-start' }}>{data.value}</span>}
 
-            {/* Layer 2 — derivation, collapsible */}
-            {data.derivation && data.derivation.length > 0 && (
-              <>
-                <Toggle
-                  label="Where the numbers come from"
-                  open={showDerivation}
-                  onToggle={() => setShowDerivation((v) => !v)}
-                  active={showDerivation}
-                />
-                {showDerivation && (
-                  <dl style={{ margin: '0 16px', display: 'flex', flexDirection: 'column', gap: 8, paddingBottom: 12 }}>
-                    {data.derivation.map((line, i) => (
-                      <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <dt style={{ fontSize: 12.5, color: 'var(--qa-glass-dim)' }}>{line.label}</dt>
-                          <dd style={{ margin: 0, fontFamily: 'var(--qa-font-mono)', fontSize: 12.5, color: 'var(--qa-glass-text)' }}>
-                            {line.value}
-                          </dd>
-                        </div>
-                        {line.parts && (
-                          <span style={{ fontFamily: 'var(--qa-font-mono)', fontSize: 9.5, color: 'var(--qa-vellum-faint)' }}>
-                            {line.parts.map((p, j) => `${j > 0 ? ' + ' : ''}${p.value} ${p.label}`).join('')}
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </dl>
-                )}
-              </>
-            )}
+          {/* L1 — always visible, one sentence, plain language. */}
+          <p style={{ ...narration, margin: 0 }}>{data.summary}</p>
 
-            {/* Layer 3 — full rules text, collapsible */}
-            {data.rulesText && (
-              <>
-                <Toggle
-                  label="Full rules text"
-                  open={showRules}
-                  onToggle={() => setShowRules((v) => !v)}
-                  active={showRules}
-                />
-                {showRules && (
-                  <div
-                    style={{
-                      margin: '0 16px 16px',
-                      padding: '10px 12px',
-                      borderRadius: 'var(--qa-radius-sm)',
-                      background: 'var(--qa-vellum-ghost)',
-                      fontSize: 12,
-                      lineHeight: 1.55,
-                      color: 'var(--qa-glass-dim)',
-                      whiteSpace: 'pre-wrap',
-                    }}
-                  >
-                    {data.rulesText}
-                  </div>
-                )}
-              </>
-            )}
+          {/* L2 — the working. Leads when explaining, folds away when reading. */}
+          {hasDerivation && (
+            <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--qa-s2)' }}>
+              <Disclosure
+                open={l2Open}
+                onToggle={() => setL2Open((v) => !v)}
+                label="Where the numbers come from"
+                id="qa-infopanel-l2"
+              />
+              {l2Open && (
+                <ul id="qa-infopanel-l2" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--qa-s2)' }}>
+                  {data.derivation!.map((line) => (
+                    <Row key={line.label} line={line} />
+                  ))}
+                  {data.value !== undefined && (
+                    <li className="qa2-rowline is-sum">
+                      <span style={{ ...prose, color: 'var(--qa-ink)' }}>{data.name}</span>
+                      <span style={statValue}>{data.value}</span>
+                    </li>
+                  )}
+                </ul>
+              )}
+            </section>
+          )}
 
-            {data.extra}
+          {/* L3 — the verbatim text, for when the summary is not enough. */}
+          {hasRules && (
+            <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--qa-s2)' }}>
+              <Disclosure
+                open={l3Open}
+                onToggle={() => setL3Open((v) => !v)}
+                label="Full rules text"
+                id="qa-infopanel-l3"
+              />
+              {l3Open && (
+                <p id="qa-infopanel-l3" style={{ ...prose, margin: 0, whiteSpace: 'pre-wrap' }}>
+                  {data.rulesText}
+                </p>
+              )}
+            </section>
+          )}
 
-            {/* Job #2 — Choose lives INSIDE the panel */}
-            {onChoose && (
-              <div style={{ padding: '12px 16px', borderTop: '1px solid var(--qa-glass-border)' }}>
-                <button
-                  onClick={onChoose}
-                  style={{
-                    width: '100%',
-                    fontFamily: 'var(--qa-font-display)',
-                    fontSize: 15,
-                    letterSpacing: '.5px',
-                    border: 'none',
-                    borderRadius: 'var(--qa-radius-sm)',
-                    padding: 12,
-                    background: 'linear-gradient(180deg,var(--qa-ember),var(--qa-ember-deep))',
-                    color: 'var(--qa-vellum-bright)',
-                    boxShadow: 'var(--qa-glow-ember)',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {chooseLabel === 'Choose' ? `Choose ${data.name}` : chooseLabel}
-                </button>
-              </div>
-            )}
-          </>
+          {data.flavour !== undefined && (
+            <p style={{ ...quote, margin: 0, color: 'var(--qa-ink-dim)' }}>{data.flavour}</p>
+          )}
+        </div>
+
+        {footerVisible && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--qa-s2)', padding: 'var(--qa-s4)', borderTop: 'var(--qa-hairline) solid var(--qa-glass-border)' }}>
+            <button type="button" className="qa2-menuitem" style={{ width: 'auto' }} onClick={close}>
+              <span style={prose}>Not this one</span>
+            </button>
+            <button
+              type="button"
+              className="qa2-badge is-yours"
+              style={{ border: 'none', cursor: 'pointer', padding: 'var(--qa-s2) var(--qa-s4)' }}
+              onClick={() => onChoose?.(data)}
+            >
+              {chooseLabel}
+            </button>
+          </div>
         )}
-      </div>
-
-      <style>{`
-        @keyframes qa-info-rise { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: translateY(0) } }
-        @media (prefers-reduced-motion: reduce) { [role="dialog"] { animation: none !important } }
-      `}</style>
+      </aside>
     </div>
   );
 }
 
-/** A layer toggle — uppercase mono row with a chevron, top-bordered. */
-function Toggle({
-  label,
-  open,
-  onToggle,
-  active,
-}: {
-  label: string;
-  open: boolean;
-  onToggle: () => void;
-  active: boolean;
-}) {
+/** A layer's own header — the thing you press to fold it open or shut. */
+function Disclosure({ open, onToggle, label, id }: { open: boolean; onToggle: () => void; label: string; id: string }): ReactElement {
   return (
     <button
+      type="button"
+      className="qa2-explain is-row"
+      style={{ width: '100%', justifyContent: 'space-between', cursor: 'pointer' }}
       onClick={onToggle}
       aria-expanded={open}
-      style={{
-        margin: '0 16px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        background: 'none',
-        border: 'none',
-        borderTop: '1px solid var(--qa-glass-border)',
-        padding: '10px 0',
-        fontFamily: 'var(--qa-font-mono)',
-        fontSize: 10,
-        letterSpacing: 'var(--qa-track-label)',
-        textTransform: 'uppercase',
-        // an open section reads in full-strength ink, a closed one dims
-        color: active ? 'var(--qa-glass-text)' : 'var(--qa-glass-dim)',
-        cursor: 'pointer',
-      }}
+      aria-controls={id}
     >
-      {label} <span aria-hidden>{open ? '▾' : '▸'}</span>
+      <span className="qa2-explain-label" style={{ ...statMeta, fontSize: 'var(--qa-text-whisper)', letterSpacing: 'var(--qa-tracking-caps)', textTransform: 'uppercase' }}>
+        {label}
+      </span>
+      <Glyph name={open ? 'chevronDown' : 'chevronRight'} size={12} />
     </button>
   );
 }
 
-function HomebrewBadge() {
-  // "Custom content never looks second-class" — a quiet gold tint, not a warning.
+/**
+ * One derivation line. `parts` is the optional second line — the breakdown
+ * under the value — and it stays mono, because it is arithmetic.
+ */
+function Row({ line }: { line: DerivationLine }): ReactElement {
   return (
-    <span
-      style={{
-        fontFamily: 'var(--qa-font-mono)',
-        fontSize: 8.5,
-        letterSpacing: 'var(--qa-track-label)',
-        textTransform: 'uppercase',
-        padding: '2px 7px',
-        borderRadius: 'var(--qa-radius-xs)',
-        color: 'var(--qa-gold)',
-        border: '1px solid color-mix(in srgb, var(--qa-gold) 50%, transparent)',
-      }}
-    >
-      Homebrew
-    </span>
+    <li className="qa2-rowline" style={{ alignItems: 'flex-start' }}>
+      <span style={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 }}>
+        <span style={{ ...prose, color: 'var(--qa-ink)' }}>{line.label}</span>
+        {line.parts !== undefined && <span style={{ ...statMeta, fontSize: 'var(--qa-text-whisper)' }}>{line.parts}</span>}
+      </span>
+      <span style={statMeta}>{line.value}</span>
+    </li>
   );
 }
 
-/** The candle-breath skeleton while a lookup resolves. */
-function LoadingSkeleton() {
-  const bar = (w: string | number, h: number): CSSProperties => ({
-    width: w,
-    height: h,
-    borderRadius: 2,
-    background: 'var(--qa-vellum-ghost)',
-  });
+/**
+ * The affordance that opens this panel from beside a number. Kept here rather
+ * than in the design layer because it is InfoPanel's own doorway — the shared
+ * `ExplainValue` readout is the one most surfaces should reach for, and this
+ * is the fallback for places with no label to underline.
+ */
+export function ExplainButton({ label, onClick }: { label: string; onClick: () => void }): ReactElement {
   return (
-    // qa- class so the base.css reduced-motion guard stops the breath
-    <div className="qa-info-loading" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10, animation: 'qa-candle 3.2s infinite' }}>
-      <span style={bar(80, 8)} />
-      <span style={bar(150, 16)} />
-      <span style={bar('100%', 8)} />
-      <span style={bar('70%', 8)} />
-    </div>
-  );
-}
-
-function NotFound({ onClose }: { onClose: () => void }) {
-  return (
-    <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <span style={{ fontFamily: 'var(--qa-font-display)', fontSize: 17, color: 'var(--qa-glass-text)' }}>
-        Nothing to show
-      </span>
-      <span style={{ fontSize: 12.5, fontStyle: 'italic', color: 'var(--qa-glass-dim)' }}>
-        We couldn't find that entry.{' '}
-        <button
-          onClick={onClose}
-          style={{ background: 'none', border: 'none', padding: 0, color: 'var(--qa-ember-bright)', cursor: 'pointer', font: 'inherit', fontStyle: 'italic' }}
-        >
-          Close this
-        </button>{' '}
-        and try the search.
-      </span>
-    </div>
+    <button type="button" className="qa2-ctl" style={{ width: 20, height: 20 }} onClick={onClick} aria-label={label} title={label}>
+      <span style={{ ...statMeta, fontSize: 'var(--qa-text-whisper)' }}>?</span>
+    </button>
   );
 }

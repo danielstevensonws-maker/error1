@@ -1,247 +1,146 @@
 /**
- * PullFromCampaignPicker — the "pull from campaign" reference picker. Playbook
- * §3 primitive, reused by cast→scene, locations, rewards, and recurring maps:
- * anywhere you reference something that already exists in the campaign instead
- * of authoring it fresh. Reference, don't duplicate — the picked item stays one
- * source of truth; the scene just points at it. Edit the member once and every
- * scene that references them follows.
+ * PullFromCampaignPicker — the reference picker (Build Playbook §3;
+ * component-list A5; Session Planner design spec).
  *
- * Content-agnostic: it takes a list of PickableItem view-models (id, name, a
- * kind label, an optional one-line hint) and reports which ids were picked.
- * The caller maps its campaign entities (cast, locations, …) into that shape —
- * the same seam entityToInfoPanel is for the InfoPanel. Single- or multi-select.
+ * "Reference, don't duplicate." Anywhere the DM points at something that
+ * already exists in the campaign (cast, locations, rewards, recurring maps)
+ * instead of authoring it fresh — the picked item stays one source of truth,
+ * so editing the NPC once updates every scene that references it.
  *
- * Design: the Questra V1 Prototype sheet, §Picker and Presets. Themed entirely
- * via --qa-* tokens; rows wash on hover, the selected row wears an ember tint,
- * and focus wears the one --qa-focus-ring.
+ * Content-agnostic via `PickableItem` — the same seam entityToInfoPanel.ts is
+ * for InfoPanel. The caller adapts its campaign entities into this thin
+ * shape; the picker itself has no knowledge of cast vs. locations vs.
+ * rewards, so a new pullable category needs no component change.
+ *
+ * Owns no data: `selectedIds` in, `onChange(nextSelectedIds)` out. Search is
+ * the picker's own local UI state (not reported to the caller).
+ *
+ * TWO EMPTIES, NEVER ONE MESSAGE. "Nothing in the campaign yet" and "nothing
+ * matched what you typed" are different facts about different problems, and a
+ * DM told the wrong one goes looking for a bug in the wrong place.
  */
-import { useId, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
-import { Chip, Label } from '@questra/ui';
+import { useId, useMemo, useState, type KeyboardEvent, type ReactElement } from 'react';
+import { DesignStyles, Glyph, itemName, prose, statMeta } from '../design/index.js';
 
 export interface PickableItem {
   id: string;
   name: string;
-  /** Plain-language category ("Cast", "Location", "Reward"). */
+  /** Plain-language category, e.g. "Cast", "Location", "Reward". */
   kind: string;
-  /** One-line hint shown under the name (a role, a district, a rarity). */
+  /** One-line hint: a role, a district, a rarity. */
   hint?: string;
 }
 
+export type PickerMode = 'single' | 'multi';
+
 export interface PullFromCampaignPickerProps {
-  /** What we're pulling ("Pull cast into this scene"). Plain language. */
-  title: string;
   items: PickableItem[];
-  /** Ids already pulled in — shown selected and toggleable. */
   selectedIds: string[];
   onChange: (nextSelectedIds: string[]) => void;
-  /** Single-select collapses selection to one id. Default multi. */
-  mode?: 'single' | 'multi';
-  /** Shown when the campaign has nothing of this kind yet. */
-  emptyLabel?: ReactNode;
-  searchPlaceholder?: string;
+  /** "multi" (default) toggles freely; "single" collapses to at most one id, re-picking clears it. */
+  mode?: PickerMode;
+  /** Shown when there is nothing at all to pick from (a fresh campaign) — never confused with "no search matches". */
+  emptyLabel?: string;
+}
+
+function matches(item: PickableItem, query: string): boolean {
+  return (
+    item.name.toLowerCase().includes(query) ||
+    item.kind.toLowerCase().includes(query) ||
+    (item.hint?.toLowerCase().includes(query) ?? false)
+  );
 }
 
 export function PullFromCampaignPicker({
-  title,
   items,
   selectedIds,
   onChange,
   mode = 'multi',
   emptyLabel = 'Nothing in the campaign to pull from yet.',
-  searchPlaceholder = 'Search the campaign…',
-}: PullFromCampaignPickerProps) {
-  const [query, setQuery] = useState('');
-  const [searchFocused, setSearchFocused] = useState(false);
+}: PullFromCampaignPickerProps): ReactElement {
   const searchId = useId();
-  const selected = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const [query, setQuery] = useState('');
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return items;
-    return items.filter(
-      (it) =>
-        it.name.toLowerCase().includes(q) ||
-        it.kind.toLowerCase().includes(q) ||
-        (it.hint?.toLowerCase().includes(q) ?? false),
-    );
+    return q === '' ? items : items.filter((item) => matches(item, q));
   }, [items, query]);
 
-  function toggle(id: string) {
+  const noItemsAtAll = items.length === 0;
+  const noMatches = !noItemsAtAll && filtered.length === 0;
+
+  function toggle(id: string): void {
     if (mode === 'single') {
-      onChange(selected.has(id) ? [] : [id]);
+      onChange(selectedIds.includes(id) ? [] : [id]);
       return;
     }
-    const next = new Set(selected);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    onChange([...next]);
+    onChange(selectedIds.includes(id) ? selectedIds.filter((x) => x !== id) : [...selectedIds, id]);
+  }
+
+  function onRowKeyDown(e: KeyboardEvent<HTMLLIElement>, id: string): void {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggle(id);
+    }
   }
 
   return (
-    <section
-      style={{
-        border: '1px solid var(--qa-hairline-soft)',
-        borderRadius: 'var(--qa-radius-md)',
-        background: 'var(--qa-ink-raised)',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        maxHeight: 420,
-      }}
-    >
-      <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--qa-hairline-soft)' }}>
-        <Label tone="dim" style={{ display: 'block', marginBottom: 8 }}>
-          {title}
-        </Label>
-        <label htmlFor={searchId} style={srOnly}>
-          {searchPlaceholder}
-        </label>
+    <div className="qa2-picker">
+      <DesignStyles />
+      <div className="qa2-picker-search">
+        <label htmlFor={searchId} className="qa2-sr">Search</label>
+        <Glyph name="search" size={13} />
         <input
           id={searchId}
-          type="search"
+          className="qa2-field-input"
+          type="text"
           value={query}
-          placeholder={searchPlaceholder}
           onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => setSearchFocused(true)}
-          onBlur={() => setSearchFocused(false)}
-          style={{
-            width: '100%',
-            boxSizing: 'border-box',
-            fontFamily: 'var(--qa-font-body)',
-            fontSize: 13,
-            color: 'var(--qa-vellum)',
-            background: 'var(--qa-vellum-ghost)',
-            border: '1px solid var(--qa-hairline)',
-            borderRadius: 'var(--qa-radius-sm)',
-            padding: '8px 10px',
-            outline: 'none',
-            ...(searchFocused ? { boxShadow: 'var(--qa-focus-ring)' } : {}),
-            transition: 'box-shadow var(--qa-dur-fast) var(--qa-ease)',
-          }}
+          placeholder="Search…"
+          style={prose}
         />
       </div>
 
-      <div
-        role="listbox"
-        aria-multiselectable={mode === 'multi'}
-        style={{ display: 'flex', flexDirection: 'column', overflowY: 'auto' }}
-      >
-        {filtered.length === 0 ? (
-          // Typed-but-no-match and fresh-campaign are different facts; each says so.
-          <p
-            style={{
-              margin: 0,
-              padding: '18px 12px',
-              fontSize: 12.5,
-              fontStyle: 'italic',
-              color: 'var(--qa-vellum-dim)',
-            }}
-          >
-            {query.trim() ? 'No matches.' : emptyLabel}
-          </p>
-        ) : (
-          filtered.map((it) => (
-            <Row
-              key={it.id}
-              item={it}
-              selected={selected.has(it.id)}
-              onToggle={() => toggle(it.id)}
-            />
-          ))
-        )}
-      </div>
-    </section>
+      {noItemsAtAll && <Empty text={emptyLabel} />}
+      {noMatches && <Empty text="No matches." />}
+
+      {!noItemsAtAll && !noMatches && (
+        <ul className="qa2-picker-list" role="listbox" aria-multiselectable={mode === 'multi'}>
+          {filtered.map((item) => {
+            const selected = selectedIds.includes(item.id);
+            return (
+              <li
+                key={item.id}
+                className={selected ? 'qa2-row is-picked' : 'qa2-row'}
+                role="option"
+                aria-selected={selected}
+                tabIndex={0}
+                onClick={() => toggle(item.id)}
+                onKeyDown={(e) => onRowKeyDown(e, item.id)}
+              >
+                {/* Reserved whether or not it is ticked, so picking an item
+                    does not shove its name sideways under the cursor. */}
+                <span className="qa2-row-tick" aria-hidden="true">
+                  {selected && <Glyph name="check" size={12} />}
+                </span>
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ ...itemName, display: 'block' }}>{item.name}</span>
+                  {item.hint !== undefined && (
+                    <span style={{ ...prose, color: 'var(--qa-ink-faint)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {item.hint}
+                    </span>
+                  )}
+                </span>
+                <span style={{ ...statMeta, flex: 'none' }}>{item.kind}</span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   );
 }
 
-function Row({
-  item,
-  selected,
-  onToggle,
-}: {
-  item: PickableItem;
-  selected: boolean;
-  onToggle: () => void;
-}) {
-  const [hover, setHover] = useState(false);
-  const [focused, setFocused] = useState(false);
-
-  const background = selected
-    ? 'color-mix(in srgb, var(--qa-ember) 8%, transparent)'
-    : hover
-      ? 'var(--qa-vellum-ghost)'
-      : 'transparent';
-
-  return (
-    <button
-      type="button"
-      role="option"
-      aria-selected={selected}
-      onClick={onToggle}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        width: '100%',
-        textAlign: 'left',
-        padding: '10px 12px',
-        border: 'none',
-        background,
-        cursor: 'pointer',
-        ...(focused ? { boxShadow: 'var(--qa-focus-ring)' } : {}),
-        transition: 'background var(--qa-dur-fast) var(--qa-ease)',
-      }}
-    >
-      <Check on={selected} />
-      <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--qa-vellum)' }}>{item.name}</span>
-        {item.hint && (
-          <span style={{ fontSize: 10.5, color: 'var(--qa-vellum-dim)' }}>{item.hint}</span>
-        )}
-      </span>
-      <Chip>{item.kind}</Chip>
-    </button>
-  );
+function Empty({ text }: { text: string }): ReactElement {
+  return <p className="qa2-picker-empty" style={prose}>{text}</p>;
 }
-
-function Check({ on }: { on: boolean }) {
-  return (
-    <span
-      aria-hidden
-      style={{
-        width: 16,
-        height: 16,
-        flex: 'none',
-        borderRadius: 'var(--qa-radius-xs)',
-        border: `1px solid ${on ? 'var(--qa-ember)' : 'var(--qa-hairline)'}`,
-        background: on ? 'color-mix(in srgb, var(--qa-ember) 30%, transparent)' : 'transparent',
-        color: 'var(--qa-vellum-bright)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: 10,
-        lineHeight: 1,
-        transition:
-          'background var(--qa-dur-fast) var(--qa-ease), border-color var(--qa-dur-fast) var(--qa-ease)',
-      }}
-    >
-      {on ? '✓' : ''}
-    </span>
-  );
-}
-
-const srOnly: CSSProperties = {
-  position: 'absolute',
-  width: 1,
-  height: 1,
-  padding: 0,
-  margin: -1,
-  overflow: 'hidden',
-  clip: 'rect(0 0 0 0)',
-  whiteSpace: 'nowrap',
-  border: 0,
-};

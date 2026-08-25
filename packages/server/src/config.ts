@@ -41,6 +41,9 @@ export interface ServerConfig {
   databaseUrl: string | undefined;
   /** JWT signing secret (ADR-0004). Required whenever auth is wired. */
   jwtSecret: string | undefined;
+  /** The web app's origin, for the /auth + /campaigns CORS allowlist (credentialed —
+   *  the refresh cookie needs a named origin, `*` can't carry credentials). */
+  webOrigin: string;
 }
 
 export function readConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
@@ -48,5 +51,6 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
     port: env.PORT ? Number(env.PORT) : 8787,
     databaseUrl: env.DATABASE_URL || undefined,
     jwtSecret: env.QUESTRA_JWT_SECRET || undefined,
+    webOrigin: env.QUESTRA_WEB_ORIGIN || 'http://localhost:5173',
   };
 }

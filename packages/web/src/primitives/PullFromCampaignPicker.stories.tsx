@@ -1,111 +1,81 @@
 /**
- * PullFromCampaignPicker stories — the picker pulling REAL fixtures as if they
- * were campaign entries, restyled to the Questra V1 Prototype sheet. Goblin
- * Warrior (a recurring foe → cast), the Fighter class, and Fireball are mapped
- * into PickableItem view-models via the same kind of adapter entityToInfoPanel
- * is for InfoPanel — proving the picker references existing contracts content
- * with no bespoke shape.
+ * Primitives/PullFromCampaignPicker — the reference picker.
+ *
+ * PullIntoScene and SinglePick build their items from REAL contracts
+ * fixtures (Goblin Warrior, the Fighter class, Fireball) parsed through
+ * RulesEntitySchema via a local toPickable() adapter — proving the picker
+ * references existing contracts content with no bespoke shape.
  */
-import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { RulesEntitySchema, type RulesEntity } from '@questra/contracts';
-import { PullFromCampaignPicker, type PickableItem } from './PullFromCampaignPicker.js';
-import { TableBackdrop } from './TableBackdrop.js';
+import type { ReactNode } from 'react';
+import { useState } from 'react';
+import { RulesEntitySchema } from '@questra/contracts';
+import type { RulesEntity } from '@questra/contracts';
+import { PullFromCampaignPicker } from './PullFromCampaignPicker.js';
+import type { PickableItem } from './PullFromCampaignPicker.js';
 
 import goblin from '@questra/contracts/src/fixtures/goblin-warrior.json';
-import fireball from '@questra/contracts/src/fixtures/fireball.json';
 import fighter from '@questra/contracts/src/fixtures/fighter.json';
+import fireball from '@questra/contracts/src/fixtures/fireball.json';
 
-import '@questra/theme/styles.css';
-import '../theme/index.css';
-
-const meta: Meta<typeof PullFromCampaignPicker> = {
-  title: 'Primitives/PullFromCampaignPicker',
-  component: PullFromCampaignPicker,
-  decorators: [(Story) => <TableBackdrop height={520} center><Story /></TableBackdrop>],
-};
-export default meta;
-type Story = StoryObj<typeof PullFromCampaignPicker>;
-
-/** Adapter: a rules entity → a pickable reference (the seam to real content). */
+/** The caller-side adapter — the picker itself has no idea what a "monster" or "class" is. */
 function toPickable(entity: RulesEntity): PickableItem {
-  const kind =
-    entity.entityType === 'monster' ? 'Cast' : entity.entityType === 'class' ? 'Class' : 'Reference';
+  const kind = entity.entityType === 'monster' ? 'Cast' : entity.entityType === 'class' ? 'Class' : 'Reference';
   return { id: entity.id, name: entity.name, kind, hint: entity.plain };
 }
 
-const items: PickableItem[] = [
+const ITEMS: PickableItem[] = [
   toPickable(RulesEntitySchema.parse(goblin)),
-  toPickable(RulesEntitySchema.parse(fighter.class)),
+  toPickable(RulesEntitySchema.parse((fighter as { class: unknown }).class)),
   toPickable(RulesEntitySchema.parse(fireball)),
 ];
 
-function Frame({ children }: { children: React.ReactNode }) {
-  return <div style={{ width: 290 }}>{children}</div>;
+const meta: Meta = {
+  title: 'Primitives/PullFromCampaignPicker',
+  component: PullFromCampaignPicker,
+  parameters: { layout: 'fullscreen' },
+};
+export default meta;
+type Story = StoryObj;
+
+function Panel({ children }: { children: ReactNode }) {
+  return <div style={{ maxWidth: 420, margin: '48px auto', fontFamily: 'var(--qa-font-body)' }}>{children}</div>;
 }
 
-/** Multi-select: pull several recurring pieces into a scene. One already selected. */
+/** Multi — three items pulled into a scene's cast, the first pre-selected. */
 export const PullIntoScene: Story = {
-  render: () => {
-    const [sel, setSel] = useState<string[]>([items[0]!.id]);
+  render: function PullIntoSceneStory() {
+    const [selectedIds, setSelectedIds] = useState<string[]>([ITEMS[0]!.id]);
     return (
-      <Frame>
-        <PullFromCampaignPicker
-          title="Pull into this scene"
-          items={items}
-          selectedIds={sel}
-          onChange={setSel}
-        />
-      </Frame>
+      <Panel>
+        <PullFromCampaignPicker items={ITEMS} selectedIds={selectedIds} onChange={setSelectedIds} mode="multi" />
+      </Panel>
     );
   },
 };
 
-/** Single-select: pick the one recurring map / location this scene uses. */
+/** Single — "the one recurring map this scene uses". Picking a second clears the first; re-picking the same one clears it. */
 export const SinglePick: Story = {
-  render: () => {
-    const [sel, setSel] = useState<string[]>([]);
+  render: function SinglePickStory() {
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
     return (
-      <Frame>
-        <PullFromCampaignPicker
-          title="Recurring map for this scene"
-          items={items}
-          selectedIds={sel}
-          onChange={setSel}
-          mode="single"
-        />
-      </Frame>
+      <Panel>
+        <PullFromCampaignPicker items={ITEMS} selectedIds={selectedIds} onChange={setSelectedIds} mode="single" />
+      </Panel>
     );
   },
 };
 
-/**
- * The two empty states, side by side — they are different facts and each says
- * so. Typing a term that matches nothing is not the same as a fresh campaign
- * with nothing of this kind yet.
- */
-export const EmptyStates: Story = {
-  render: () => {
-    const [sel, setSel] = useState<string[]>([]);
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: 290 }}>
-        {/* typed-but-no-match: seeded by searching for something absent */}
-        <PullFromCampaignPicker
-          title="Pull into this scene"
-          items={items}
-          selectedIds={sel}
-          onChange={setSel}
-          searchPlaceholder="Try typing “wyvern”"
-        />
-        {/* fresh campaign: nothing of this kind exists at all */}
-        <PullFromCampaignPicker
-          title="Pull rewards"
-          items={[]}
-          selectedIds={[]}
-          onChange={() => {}}
-          emptyLabel="No rewards defined in this campaign yet."
-        />
-      </div>
-    );
-  },
+/** A fresh campaign — no rewards defined yet. Distinct from "no search matches". */
+export const Empty: Story = {
+  render: () => (
+    <Panel>
+      <PullFromCampaignPicker
+        items={[]}
+        selectedIds={[]}
+        onChange={() => {}}
+        emptyLabel="No rewards defined in this campaign yet."
+      />
+    </Panel>
+  ),
 };

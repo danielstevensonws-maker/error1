@@ -1,40 +1,40 @@
 /**
- * Bridges the CSS-variable tokens (tokens.css) into Tailwind v4's @theme so
- * components can use semantic utilities like `bg-surface`, `text-ink`,
- * `text-secret` instead of hardcoded values. Tailwind v4 reads @theme at build.
+ * The web app's stylesheet entry.
  *
- * Import order matters: tokens.css first (defines the vars), then this.
+ * The design tokens live in @questra/theme and are transcribed from Claude
+ * Design (ADR-0014). This file imports them and adds only what is genuinely
+ * app-level: the slide-in keyframes primitives share.
+ *
+ * Do NOT redefine a --qa-* value here. Changing the design means re-syncing
+ * @questra/theme, never patching it downstream.
  */
+
+@import '@questra/theme/styles.css';
 @import 'tailwindcss';
-@import './tokens.css';
 
-@theme inline {
-  --color-bg: var(--q-bg);
-  --color-surface: var(--q-surface);
-  --color-surface-raised: var(--q-surface-raised);
-  --color-ink: var(--q-ink);
-  --color-ink-soft: var(--q-ink-soft);
-  --color-ink-faint: var(--q-ink-faint);
-  --color-accent: var(--q-accent);
-  --color-accent-soft: var(--q-accent-soft);
-  --color-secret: var(--q-secret);
-  --color-danger: var(--q-danger);
-  --color-success: var(--q-success);
-  --color-line: var(--q-line);
-
-  --font-body: var(--q-font-body);
-  --font-display: var(--q-font-display);
-  --font-mono: var(--q-font-mono);
-
-  --radius-sm: var(--q-radius-sm);
-  --radius-DEFAULT: var(--q-radius);
-  --radius-lg: var(--q-radius-lg);
+/* Shared motion. Primitives reference these by name so the choreography stays
+   consistent; the durations and easing come from the token set.
+   Names match the Claude Design handoff (qa-panel-in / qa-scrim-in). */
+@keyframes qa-panel-in {
+  from { transform: translateX(28px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
 }
 
-/* Base defaults so the placeholder is visible immediately in dev/storybook. */
-body {
-  background: var(--q-bg);
-  color: var(--q-ink);
-  font-family: var(--q-font-body);
-  line-height: var(--q-leading-normal);
+@keyframes qa-scrim-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
+
+/* AcceptTweakRejectCard: entrance + the streaming caret. */
+@keyframes qa-card-in {
+  from { transform: translateY(8px); opacity: 0; }
+  to   { transform: translateY(0);   opacity: 1; }
+}
+
+@keyframes qa-blink {
+  0%, 49%  { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+/* Reduced motion is handled globally in @questra/theme's styles.css, which
+   neutralises animation and transition durations for everything. */

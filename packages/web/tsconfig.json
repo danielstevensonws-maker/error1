@@ -1,16 +1,27 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
-    "skipLibCheck": true,
     "noEmit": true,
-    "types": ["react", "react-dom"]
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "skipLibCheck": true,
+    "types": ["vite/client"]
   },
-  "include": ["src"]
+  /* TESTS ARE SOURCE. The src tree was already covered because these tests sit
+     beside the code they test, but the root test/ directory was not — "*.ts"
+     matches root-level files only, so ten suites went unchecked. This config
+     never emits (noEmit is on for the whole package; vite does the building),
+     so widening it costs nothing but coverage. */
+  "include": [
+    "src/**/*.ts", "src/**/*.tsx",
+    "test/**/*.ts", "test/**/*.tsx",
+    ".storybook/**/*.ts", "*.ts"
+  ]
 }

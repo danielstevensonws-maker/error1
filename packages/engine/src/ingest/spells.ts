@@ -5,7 +5,7 @@
  *
  * Each printed spell is a fixed header block followed by prose:
  *   <Name>
- *   <Cantrip|Level N> <School> (<class list>)   [+ optional " (Ritual)"]
+ *   "Level N <School> (<class list>)"  |  "<School> Cantrip (<class list>)"
  *   Casting Time: <...>
  *   Range: <...>
  *   Components: V, S, M (materials)
@@ -64,13 +64,22 @@ interface Header {
 }
 function parseHeader(window: string[]): Header | null {
   const first = (window[0] ?? '').trim();
-  const start = first.match(/^(Cantrip|Level ([1-9]))\s+([A-Za-z]+)(\s*\(Ritual\))?\s*\((.*)$/);
-  if (!start) return null;
-  const school = start[3]!;
+
+  // SRD 5.2.1 prints two shapes, and they order school and level differently:
+  //   "Level 3 Evocation (Sorcerer, Wizard)"  — levelled spells lead with the level
+  //   "Evocation Cantrip (Sorcerer, Wizard)"  — cantrips lead with the SCHOOL
+  // Reading only the first shape is what left the dataset with no cantrips.
+  const levelled = first.match(/^Level ([1-9])\s+([A-Za-z]+)(\s*\(Ritual\))?\s*\((.*)$/);
+  const cantrip = levelled ? null : first.match(/^([A-Za-z]+)\s+Cantrip(\s*\(Ritual\))?\s*\((.*)$/);
+  if (!levelled && !cantrip) return null;
+
+  const level = levelled ? Number(levelled[1]) : 0;
+  const school = levelled ? levelled[2]! : cantrip![1]!;
+  const ritual = (levelled ? levelled[3] : cantrip![2]) !== undefined;
   if (!SCHOOL_SET.has(school)) return null;
 
   // gather the class list until we hit the closing ')', across up to 3 lines
-  let list = start[5]!;
+  let list = levelled ? levelled[4]! : cantrip![3]!;
   let used = 1;
   while (!list.includes(')') && used < 3 && window[used] !== undefined) {
     list += ' ' + window[used]!.trim();
@@ -81,9 +90,9 @@ function parseHeader(window: string[]): Header | null {
   const classText = list.slice(0, close);
 
   return {
-    level: start[1]!.startsWith('Cantrip') ? 0 : Number(start[2]),
+    level,
     school: school as SchoolTitle,
-    ritual: start[4] !== undefined,
+    ritual,
     classLists: classText.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean),
     linesUsed: used,
   };

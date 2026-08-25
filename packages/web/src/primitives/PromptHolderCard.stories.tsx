@@ -1,135 +1,184 @@
 /**
- * PromptHolderCard stories — the one interrupt card across its consumers
- * (Brief 08): an opportunity attack (options seeded from the REAL Goblin Warrior
- * fixture's attack), a legendary-action prompt with a pooled cost, a lair action,
- * and a DM answering a ruling on a player's behalf.
+ * Primitives/PromptHolderCard — one card, used six ways.
  *
- * Timeouts are set long here so the countdown doesn't auto-decline during a
- * static Storybook snapshot; in production the server owns the real 60s.
+ * OpportunityAttack and LegendaryAction build their `context`/`options` from
+ * REAL contracts shapes: PromptContextSchema-validated data and the real
+ * Goblin Warrior fixture's first attack, via promptContextToLines.ts. Both
+ * every story sets timeoutSec: 600 — a Storybook-only accommodation, since
+ * the production 60s default would auto-decline a static snapshot before
+ * anyone could look at it. The server owns the real 60s.
  */
-import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { RulesEntitySchema } from '@questra/contracts';
-import { PromptHolderCard, type HolderPrompt } from './PromptHolderCard.js';
+import type { ReactNode } from 'react';
+import { useState } from 'react';
+import { PromptContextSchema, RulesEntitySchema } from '@questra/contracts';
+import { PromptHolderCard } from './PromptHolderCard.js';
+import type { PromptOptionVM } from './PromptHolderCard.js';
+import { promptContextToLines, promptKindLabel, promptOptionsToVM } from './promptContextToLines.js';
 
 import goblin from '@questra/contracts/src/fixtures/goblin-warrior.json';
 
-import '../theme/index.css';
-
-const meta: Meta<typeof PromptHolderCard> = {
-  title: 'Primitives/PromptHolderCard',
-  component: PromptHolderCard,
-};
-export default meta;
-type Story = StoryObj<typeof PromptHolderCard>;
-
-function Frame({ children }: { children: React.ReactNode }) {
-  return <div style={{ maxWidth: 460, padding: 24, background: 'var(--q-bg)' }}>{children}</div>;
-}
-
-/** Small harness that shows what the holder chose. */
-function Resolvable({ prompt }: { prompt: HolderPrompt }) {
-  const [done, setDone] = useState<string | null>(null);
-  if (done) {
-    return <p style={{ color: 'var(--q-ink-soft)', fontSize: 'var(--q-text-sm)' }}>{done}</p>;
-  }
+function Ground({ children }: { children: ReactNode }) {
   return (
-    <PromptHolderCard
-      prompt={prompt}
-      onTake={(id) => setDone(`Took: ${id ?? 'reaction'}`)}
-      onDecline={() => setDone('Declined.')}
-    />
+    <div
+      style={{
+        position: 'relative',
+        minHeight: 520,
+        display: 'grid',
+        placeItems: 'center',
+        padding: 48,
+        background: 'radial-gradient(120% 90% at 56% 30%, var(--qa-map-hi) 0%, var(--qa-map-mid) 44%, var(--qa-map-lo) 100%)',
+      }}
+    >
+      {children}
+    </div>
   );
 }
 
-/** Opportunity attack — the option is the Goblin Warrior's real scimitar attack. */
+/** Replaces the card with its reported outcome once taken/declined — makes the report visible, not buried in a console log. */
+function Resolvable({
+  render,
+}: {
+  render: (props: { onTake: (optionId?: string) => void; onDecline: () => void }) => ReactNode;
+}) {
+  const [outcome, setOutcome] = useState<string | null>(null);
+  if (outcome !== null) {
+    return (
+      <Ground>
+        <p style={{ fontFamily: 'var(--qa-font-mono)', color: 'var(--qa-ink-dim)' }}>{outcome}</p>
+      </Ground>
+    );
+  }
+  return (
+    <Ground>
+      {render({
+        onTake: (optionId) => setOutcome(optionId === undefined ? 'Took: (bare)' : `Took: ${optionId}`),
+        onDecline: () => setOutcome('Declined.'),
+      })}
+    </Ground>
+  );
+}
+
+const meta: Meta = {
+  title: 'Primitives/PromptHolderCard',
+  component: PromptHolderCard,
+  parameters: { layout: 'fullscreen' },
+};
+export default meta;
+type Story = StoryObj;
+
+/** A player character's reaction (Player View): the Goblin Warrior's own attack as the option. */
 export const OpportunityAttack: Story = {
   render: () => {
-    const g = RulesEntitySchema.parse(goblin);
-    const attack = g.entityType === 'monster' ? g.meta.actions[0] : undefined;
+    const goblinEntity = RulesEntitySchema.parse(goblin);
+    const attackName = goblinEntity.entityType === 'monster' ? goblinEntity.meta.actions[0]?.name ?? 'Attack' : 'Attack';
+    const context = PromptContextSchema.parse({
+      kind: 'opportunity_attack',
+      moverId: 'pc-wren',
+      provokerId: 'npc-goblin-1',
+      pathStep: { from: { x: 2, y: 3 }, to: { x: 4, y: 3 } },
+      attackOptions: [attackName],
+    });
+    const options: PromptOptionVM[] = context.kind === 'opportunity_attack' ? context.attackOptions.map((name) => ({ id: name, label: name })) : [];
+
     return (
-      <Frame>
-        <Resolvable
-          prompt={{
-            promptId: 'p-oa-1',
-            kind: 'opportunity_attack',
-            holder: g.name,
-            trigger: 'The rogue steps out of reach.',
-            context: ['Reaction available', 'Target within 5 ft as they leave'],
-            options: attack ? [{ id: attack.name, label: attack.name, detail: 'Reaction' }] : [],
-            timeoutSec: 600,
-          }}
-        />
-      </Frame>
+      <Resolvable
+        render={({ onTake, onDecline }) => (
+          <PromptHolderCard
+            kind={promptKindLabel(context)}
+            holder={goblinEntity.name}
+            context={promptContextToLines(context)}
+            options={options}
+            timeoutSec={600}
+            onTake={onTake}
+            onDecline={onDecline}
+          />
+        )}
+      />
     );
   },
 };
 
-/** Legendary action — a pooled cost the DM spends at a turn boundary. */
+/** A boss's legendary action (DM View): three pooled-cost options. */
 export const LegendaryAction: Story = {
-  render: () => (
-    <Frame>
+  render: () => {
+    const context = PromptContextSchema.parse({
+      kind: 'legendary_action',
+      poolRemaining: 3,
+      options: [
+        { name: 'Detect', cost: 1 },
+        { name: 'Tail Attack', cost: 1 },
+        { name: 'Wing Attack', cost: 2 },
+      ],
+    });
+    const options = context.kind === 'legendary_action' ? promptOptionsToVM(context.options) : [];
+
+    return (
       <Resolvable
-        prompt={{
-          promptId: 'p-leg-1',
-          kind: 'legendary',
-          holder: 'Ancient White Dragon',
-          trigger: 'A creature’s turn just ended. 3 legendary actions remain.',
-          options: [
-            { id: 'detect', label: 'Detect', detail: '1 action' },
-            { id: 'tail', label: 'Tail Attack', detail: '1 action' },
-            { id: 'wing', label: 'Wing Attack', detail: '2 actions' },
-          ],
-          timeoutSec: 600,
-        }}
+        render={({ onTake, onDecline }) => (
+          <PromptHolderCard
+            kind={promptKindLabel(context)}
+            holder="Ancient White Dragon"
+            context={promptContextToLines(context)}
+            options={options}
+            timeoutSec={600}
+            onTake={onTake}
+            onDecline={onDecline}
+          />
+        )}
       />
-    </Frame>
-  ),
+    );
+  },
 };
 
-/** Lair action — the lair acts at initiative 20 (losing ties). */
+/** The lair itself acting at initiative 20 (DM View), with a Skip option alongside the real choices. */
 export const LairAction: Story = {
-  render: () => (
-    <Frame>
+  render: () => {
+    const context = PromptContextSchema.parse({
+      kind: 'lair',
+      options: [{ name: 'Freeze the Water' }, { name: 'Grasping Ice' }],
+    });
+    const options: PromptOptionVM[] =
+      context.kind === 'lair' ? [...promptOptionsToVM(context.options), { id: 'skip', label: 'Skip' }] : [];
+
+    return (
       <Resolvable
-        prompt={{
-          promptId: 'p-lair-1',
-          kind: 'lair',
-          holder: 'The frozen cavern',
-          trigger: 'Initiative 20 — the lair acts.',
-          options: [
-            { id: 'ice', label: 'Grasping ice', detail: 'DC 13 or restrained' },
-            { id: 'fog', label: 'Freezing fog' },
-            { id: 'skip', label: 'Skip' },
-          ],
-          timeoutSec: 600,
-        }}
+        render={({ onTake, onDecline }) => (
+          <PromptHolderCard
+            kind={promptKindLabel(context)}
+            holder="The Frozen Cavern"
+            context={promptContextToLines(context)}
+            options={options}
+            timeoutSec={600}
+            onTake={onTake}
+            onDecline={onDecline}
+          />
+        )}
       />
-    </Frame>
-  ),
+    );
+  },
 };
 
-/** DM answers a ruling on a player’s behalf — the asDm note appears. */
+/**
+ * The DM answering for Torvald (DM View, `asDm`). "ruling" has no contracts
+ * shape yet (Playbook §3 names it, but it isn't in PromptContextSchema) — so
+ * this story, unlike the three above, builds `context` by hand rather than
+ * through promptContextToLines. That's the deliberate gap the card's own
+ * doc comment describes. Skips the Resolvable harness so the asDm note stays
+ * on screen.
+ */
 export const DmAnswersRuling: Story = {
   render: () => (
-    <Frame>
+    <Ground>
       <PromptHolderCard
+        kind="Ruling"
+        holder="Torvald"
         asDm
-        prompt={{
-          promptId: 'p-rule-1',
-          kind: 'ruling',
-          holder: 'Torvald',
-          trigger: 'Torvald wants to swing across the chasm on the chandelier.',
-          context: ['Suggested: Dexterity (Acrobatics)', 'DC 14'],
-          options: [
-            { id: 'roll', label: 'Ask for the roll' },
-            { id: 'auto', label: 'Let it happen' },
-          ],
-          timeoutSec: 600,
-        }}
+        context={['Suggested roll: Dexterity (Acrobatics).', 'Suggested target: 14 or higher.']}
+        timeoutSec={600}
         onTake={() => {}}
         onDecline={() => {}}
       />
-    </Frame>
+    </Ground>
   ),
 };

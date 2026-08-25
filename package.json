@@ -2,17 +2,20 @@
   "name": "questra",
   "private": true,
   "workspaces": ["packages/*"],
+  "_scripts_note": "check:all covers the packages that EXIST. As each later package lands (engine, server, ai), the session that creates it adds its check here — nothing may silently drop out of the gate.",
   "scripts": {
     "build:contracts": "npm run build -w @questra/contracts",
-    "build:engine": "npm run build:contracts && npm run build -w @questra/engine",
     "check": "npm run check -w @questra/contracts",
-    "precheck:all": "npm run build:contracts && npm run build -w @questra/theme && npm run build -w @questra/ui && npm run build -w @questra/engine && npm run build -w @questra/ai",
-    "check:all": "npm run check -w @questra/contracts && npm run check -w @questra/theme && npm run check -w @questra/ui && npm run check -w @questra/engine && npm run check -w @questra/server && npm run check -w @questra/ai && npm run check -w @questra/web",
+    "precheck:all": "npm run build:contracts && npm run build -w @questra/ui && npm run build -w @questra/engine && npm run build -w @questra/ai",
+    "check:all": "npm run check -w @questra/contracts && npm run check -w @questra/theme && npm run check -w @questra/ui && npm run check -w @questra/web && npm run check -w @questra/engine && npm run check -w @questra/ai && npm run check -w @questra/server",
     "predev": "npm run build:contracts",
-    "dev": "npm run dev -w @questra/web",
+    "dev": "node scripts/dev.mjs",
+    "dev:web": "npm run dev -w @questra/web",
+    "dev:server": "npm run dev -w @questra/server",
     "prestorybook": "npm run build:contracts",
     "storybook": "npm run storybook -w @questra/web",
-    "prebuild": "npm run build:engine",
+    "build-storybook": "npm run build:contracts && npm run build-storybook -w @questra/web",
+    "prebuild": "npm run build:contracts && npm run build -w @questra/engine",
     "build": "npm run build -w @questra/web"
   }
 }

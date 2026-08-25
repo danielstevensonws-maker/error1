@@ -13,14 +13,14 @@
 import { describe, it, expect } from 'vitest';
 import {
   filterStream, RulesEntitySchema,
-  type PlayEvent, type Viewer,
+  type CharacterChoices, type PlayEvent, type Viewer,
 } from '@questra/contracts';
 import {
   computeSheet, buildSheetRulesData,
   buildRulesData, resolveAttack,
   initialState, fold,
   CONDITIONS, CLASSES, DRAFT_ITEMS,
-  type Combatant, type CharacterChoices,
+  type Combatant,
 } from '@questra/engine';
 import { getRuling, makeStubModel, toRulingDecidedBody, type RulingRecipe } from '@questra/ai';
 import { SyncCore, type ResolvedToken, type IntentResolver } from '../src/sync-core.js';

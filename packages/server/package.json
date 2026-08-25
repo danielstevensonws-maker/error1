@@ -8,13 +8,15 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
-    "check": "tsc -p tsconfig.json --noEmit && vitest run",
+    "check": "tsc -p tsconfig.check.json && vitest run",
     "dev": "tsx src/main.ts",
     "migrate": "node scripts/migrate.mjs",
     "migrate:up": "npm run migrate up",
-    "migrate:down": "npm run migrate down"
+    "migrate:down": "npm run migrate down",
+    "typecheck": "tsc -p tsconfig.check.json"
   },
   "dependencies": {
+    "@fastify/cors": "^10.0.1",
     "@questra/contracts": "*",
     "@questra/engine": "*",
     "fastify": "^5.2.0",

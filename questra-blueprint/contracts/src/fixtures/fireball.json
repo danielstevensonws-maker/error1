@@ -1,0 +1,38 @@
+{
+  "id": "spell.fireball",
+  "entityType": "spell",
+  "name": "Fireball",
+  "source": "srd-5.2.1",
+  "version": "2026.07.0",
+  "qa": "verified",
+  "plain": "A 20-foot explosion of fire. Everyone in it dodges or takes heavy fire damage.",
+  "srd_text": "A bright streak flashes from you to a point you choose within range and then blossoms with a low roar into a fiery explosion. Each creature in a 20-foot-radius Sphere centered on that point makes a Dexterity saving throw, taking 8d6 Fire damage on a failed save or half as much damage on a successful one. Flammable objects in the area that aren't being worn or carried start burning. Using a Higher-Level Spell Slot. The damage increases by 1d6 for each spell slot level above 3.",
+  "effects": [
+    {
+      "hook": "trigger",
+      "on": { "event": "cast" },
+      "do": {
+        "action": "area_save",
+        "area": { "shape": "sphere", "radiusFt": 20, "origin": "point_in_range" },
+        "save": { "ability": "dex", "dc": "spell_save_dc" },
+        "onFail": { "damage": { "dice": "8d6", "type": "fire" } },
+        "onSuccess": { "damage": "half" },
+        "upcast": { "perSlotAbove": 3, "add": { "dice": "1d6" } },
+        "environment": [{ "tag": "ignite_unattended_flammables" }]
+      }
+    }
+  ],
+  "resolution": "routine",
+  "meta": {
+    "level": 3,
+    "school": "evocation",
+    "castingTime": "action",
+    "rangeFt": 150,
+    "components": ["v", "s", "m"],
+    "materials": "a ball of bat guano and sulfur",
+    "duration": "Instantaneous",
+    "concentration": false,
+    "ritual": false,
+    "classLists": ["sorcerer", "wizard"]
+  }
+}

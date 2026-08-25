@@ -4,7 +4,7 @@
  * the visibility filter runs BEFORE fan-out (see visibility.ts).
  */
 import { z } from 'zod';
-import { AbilitySchema, DamageTypeSchema } from '../rules/effects.js';
+import { AbilitySchema, DamageTypeSchema, SkillSchema } from '../rules/effects.js';
 
 const ID = z.string().min(1);
 
@@ -128,6 +128,101 @@ export const IntentSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('move'), tokenId: ID, path: z.array(CellSchema).nonempty() }),
   z.object({ kind: z.literal('use_feature'), creatureId: ID, featureId: ID }),
   z.object({ kind: z.literal('free_text'), creatureId: ID, text: z.string().min(1) }),
+  /**
+   * The DM's table controls. These are intents rather than a separate channel
+   * because they change shared state and belong on the same ordered log as
+   * everything else — a fight that started is a fact the log must carry, or a
+   * reconnecting client cannot tell whether it is in one.
+   *
+   * The server refuses these from a player; being in the union is not
+   * permission to send one.
+   */
+  z.object({ kind: z.literal('start_combat') }),
+  z.object({ kind: z.literal('end_combat') }),
+  z.object({ kind: z.literal('advance_turn') }),
+  /** A private line to one account — the whisper composer (Brief 10 §3). */
+  z.object({ kind: z.literal('whisper'), toAccountId: ID, text: z.string().min(1) }),
+  /**
+   * Resting. A short rest is where hit dice are spent; a long one is the whole
+   * transaction (Brief 04 §1). Both are the DM's to call at the table, because
+   * a rest is a fiction decision — you rest when the story lets you.
+   */
+  z.object({ kind: z.literal('rest'), rest: z.enum(['short', 'long']) }),
+  /** A death save, rolled by whoever is dying. */
+  z.object({ kind: z.literal('death_save'), creatureId: ID }),
+  /** Answering a reaction prompt (Brief 08): take it, or let it pass. */
+  z.object({ kind: z.literal('prompt_reply'), promptId: ID, take: z.boolean(), optionName: z.string().optional() }),
+
+  /**
+   * THE MOST COMMON THING THAT HAPPENS AT A TABLE: "give me a perception
+   * check". The DM names a skill and who owes the roll; those players get a
+   * card they tap.
+   *
+   * `secret` is the DM rolling it themselves without telling anybody — a real
+   * tool (players should not know they failed to spot the ambush), and
+   * deliberately not the default, because the common case is said out loud.
+   */
+  z.object({
+    kind: z.literal('ask_for_check'),
+    skill: SkillSchema,
+    /** Who owes the roll. Empty means everybody at the table. */
+    creatureIds: z.array(ID),
+    /** What they are trying to beat, if the DM has decided. */
+    dc: z.number().int().positive().optional(),
+    /** Why — "you hear something behind the door". */
+    reason: z.string().optional(),
+    secret: z.boolean().optional(),
+  }),
+
+  /** A player rolling the check they were asked for, or one they chose. */
+  z.object({ kind: z.literal('roll_check'), creatureId: ID, skill: SkillSchema, askId: ID.optional() }),
+
+  /**
+   * A DM ruling on something a player described (Law 2's escape hatch). The
+   * typed line queues on the DM's screen; this is the answer.
+   */
+  z.object({
+    kind: z.literal('rule_on'),
+    /** The seq of the free_text this answers — how the log ties them together. */
+    onSeq: z.number().int(),
+    verdict: z.enum(['allow', 'refuse']),
+    /** Said back to the table: "you can try, but the floor is slick". */
+    note: z.string().optional(),
+  }),
+
+  /**
+   * Put a creature on the board. Without this the map is empty, every attack
+   * row is dead, and a fight is the party rolling initiative against nobody.
+   */
+  z.object({
+    kind: z.literal('add_creature'),
+    /** A compendium monster id, or free-form for something the DM invented. */
+    monsterId: ID.optional(),
+    name: z.string().min(1),
+    maxHp: z.number().int().positive(),
+    ac: z.number().int().positive(),
+    /** Where it stands. Absent ⇒ the server finds a free square. */
+    cell: CellSchema.optional(),
+  }),
+  /** Take one off the board — fled, or a mistake. */
+  z.object({ kind: z.literal('remove_creature'), creatureId: ID }),
+
+  /**
+   * The DM speaking AS somebody — the goblin boss, the innkeeper, the voice
+   * behind the door.
+   *
+   * A separate intent from `free_text` because it is a different act: narrating
+   * is describing the world, and this is performing in it. The table needs to
+   * hear which is happening, and a `from: 'dm'` narration cannot say.
+   */
+  z.object({
+    kind: z.literal('speak_as'),
+    /** The creature, when it is one on the board. */
+    creatureId: ID.optional(),
+    /** What to call them — works for a creature or for somebody off-board. */
+    name: z.string().min(1),
+    text: z.string().min(1),
+  }),
 ]);
 export type Intent = z.infer<typeof IntentSchema>;
 
@@ -232,7 +327,62 @@ export const EventBodySchema = z.discriminatedUnion('t', [
     applied: z.object({ kind: RollKindSchema, dc: z.number().int() }).optional(),
   }),
   z.object({ t: z.literal('scene_changed'), sceneId: ID }),
-  z.object({ t: z.literal('narration'), text: z.string(), from: z.enum(['engine', 'dm']), spoken: z.boolean().optional() }),
+  z.object({
+    t: z.literal('narration'),
+    text: z.string(),
+    from: z.enum(['engine', 'dm']),
+    spoken: z.boolean().optional(),
+    /**
+     * WHO IS SAYING IT. Absent means the DM narrating as themselves — the
+     * voice of the world. Present means they are speaking AS somebody: the
+     * goblin boss, the innkeeper, the voice behind the door.
+     *
+     * This is the difference between a DM describing a scene and a DM
+     * performing in it, and the table needs to hear which one is happening.
+     */
+    as: z.object({ creatureId: ID.optional(), name: z.string() }).optional(),
+  }),
+
+  /**
+   * The DM asked for a check. PUBLIC by default and that is deliberate: at a
+   * real table "Mira, give me a perception check" is said out loud, everyone
+   * hears it and everyone watches the roll. Hiding it would be stranger than
+   * showing it. A secret check is sent dm_only instead.
+   */
+  z.object({
+    t: z.literal('check_asked'),
+    askId: ID,
+    skill: SkillSchema,
+    creatureIds: z.array(ID),
+    dc: z.number().int().positive().optional(),
+    reason: z.string().optional(),
+  }),
+  /** Closed when everybody asked has rolled, or the DM moved on. */
+  z.object({ t: z.literal('check_closed'), askId: ID }),
+
+  /**
+   * The DM's answer to something a player described. Carries the seq it
+   * answers so the log ties the request to the ruling — a table reading back
+   * later can see what was asked and what was allowed.
+   */
+  z.object({
+    t: z.literal('ruled'),
+    onSeq: z.number().int(),
+    verdict: z.enum(['allow', 'refuse']),
+    note: z.string().optional(),
+  }),
+
+  /** A creature joined the board — a monster the DM placed. */
+  z.object({
+    t: z.literal('creature_added'),
+    creatureId: ID,
+    name: z.string(),
+    maxHp: z.number().int().positive(),
+    ac: z.number().int().positive(),
+    cell: CellSchema.optional(),
+    monsterId: ID.optional(),
+  }),
+  z.object({ t: z.literal('creature_removed'), creatureId: ID }),
 ]);
 export type EventBody = z.infer<typeof EventBodySchema>;
 
